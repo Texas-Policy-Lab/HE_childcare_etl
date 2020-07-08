@@ -1,0 +1,2 @@
+ind: "https://datausa.io/api/data?Geography=05000US{fips}&measure=Workforce%20by%20Industry%20and%20Gender,Workforce%20by%20Industry%20and%20Gender%20Moe&drilldowns=Industry&parents=true"
+occ: "https://datausa.io/api/data?Geography=05000US{fips}&measure=Workforce%20by%20Occupation%20and%20Gender,Workforce%20by%20Occupation%20and%20Gender%20Moe&drilldowns=Occupation&parents=true"
