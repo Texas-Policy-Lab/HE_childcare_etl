@@ -1,7 +1,7 @@
 #' @title Scrape census variables from the api website to avoid typos
 #' @export
-scrape_html <- function(url = "https://api.census.gov/data/2018/acs/acs5/subject/groups/{table}.html", table) {
-  
+scrape_html <- function(table, url = "https://api.census.gov/data/2018/acs/acs5/subject/groups/{table}.html") {
+
   url <- glue::glue(url, table = table)
   
   html <- xml2::read_html(url) %>% 
@@ -21,6 +21,7 @@ scrape_html <- function(url = "https://api.census.gov/data/2018/acs/acs5/subject
                   moe = ifelse(moe & !moe_anttn, TRUE, FALSE)
     ) %>% 
     dplyr::filter(est) %>% 
+    dplyr::filter(!grepl("Total!!PERCENT ALLOCATED!!Industry", Label)) %>% 
     dplyr::mutate(Label = gsub("Estimate!!", "", Label))
   
   return(html)
@@ -86,19 +87,19 @@ get_census_api_data <- function(value_vars,
 census_call <- function(id_vars,
                         value_vars,
                         key) {
-  
+
   vars <- c(id_vars, value_vars)
-  
+
   calls <- split_call(id_vars = id_vars,
                       value_vars = value_vars)
-  
+
   l <- lapply(calls, get_census_api_data, id_vars = id_vars, key = key)
   
   df <- l %>% 
     purrr::reduce(dplyr::left_join)
   
   df[value_vars] <- apply(df[value_vars], 2, function(x) {
-    ifelse(x == "-666666666.0", NA, x)
+    ifelse(x == -666666666.0, NA, x)
   })
   
   return(df)
