@@ -7,22 +7,24 @@ config <- yaml::read_yaml("config.yaml")
 
 cnty <- readr::read_csv(here::here("./data/tx_counties.csv"))
 
-tables <- list("S2405", "S2401")
+occ_xwalk <- dm.occ_census_datausaio(url = config$occ, cnty_fips = cnty$county_fips, table = "S2401")
 
-l <- lapply(tables, scrape_html)
+tables <- list(ind = "S2405", occ = "S2401")
 
-dfs <- lapply(l, function(x) {
+l <- sapply(tables, scrape_html, USE.NAMES = TRUE, simplify = FALSE)
+
+dfs <- sapply(l, function(x, key) {
   census_call(id_vars = c("TRACT", "COUNTY"),
               value_vars = x$Name,
-              key = key$census)
-  })
+              key = key)
+  }, key = key$census, USE.NAMES = TRUE, simplify = FALSE)
 
-ind <- datausaio(url = config$ind, cnty_fips = cnty$county_fips)
+ind_xwalk <- create.ind_xwalk(url = config$ind, cnty_fips = cnty$county_fips)
 
-occ <- datausaio(url = config$occ, cnty_fips = cnty$county_fips)
+occ_xwalk <- create.occ_xwalk(url = config$occ, cnty_fips = cnty$county_fips)
 
-ind_xwalk <- ind %>% 
-  dplyr::distinct(`ID Group`, Group, `ID Industry`, Industry)
+ind_census_vars <- l[[1]]
 
-occ_xwalk <- occ %>%
-  dplyr::distinct(`ID Group`, Group, `ID Subgroup`, Subgroup, `ID Occupation`, Occupation)
+
+
+

@@ -129,7 +129,100 @@ datausaio <- function(url, cnty_fips) {
 
   df <- do.call(rbind, l2) %>% 
     as.data.frame()
-  
-  # write.csv(df, "./data/employment_industry_txcounty.csv", row.names = F)
+}
 
+#' @title Create industry crosswalk
+create.ind_xwalk <- function(url, cnty_fips) {
+  
+  df <- datausaio(url, cnty_fips) %>% 
+    dplyr::distinct(`ID Group`, Group, `ID Industry`, Industry)
+  
+  write.csv(df, "./data/ind_xwalk.csv", row.names = FALSE)
+  
+  return(df)
+}
+
+#' @title Create occupation crosswalk
+create.occ_xwalk <- function(url, cnty_fips) {
+
+  df <- datausaio(url, cnty_fips) %>%
+    dplyr::distinct(`ID Group`, Group, `ID Subgroup`, Subgroup, `ID Occupation`, Occupation) %>% 
+    dplyr::rename(occ_group_id = `ID Group`,
+                  occ_group = Group,
+                  occ_subgroup_id = `ID Subgroup`,
+                  occ_subgroup = Subgroup,
+                  occ_id = `ID Occupation`,
+                  occ = Occupation) %>% 
+    dplyr::mutate(occ_group = tolower(occ_group),
+                  occ_subgroup = tolower(occ_subgroup),
+                  occ = tolower(occ),
+                  occ_group = gsub("&", "and", occ_group),
+                  occ_subgroup = gsub("&", "and", occ_subgroup),
+                  occ = gsub("&", "and", occ),
+                  Label = paste(occ_group, occ_subgroup, occ, sep = "!!"),
+                  Label = gsub("educational", "education", Label),
+                  Label = gsub("firefighting", "fire fighting", Label))
+  
+  write.csv(occ_xwalk, "./data/occ_xwalk.csv", row.names = FALSE)
+  
+  occ_group <- df %>% 
+    dplyr::distinct(occ_group, occ_group_id)
+  
+  write.csv(occ_group, "occ_group_label.csv", row.names = FALSE)
+  
+  occ_group_subgroup_xwalk <- df %>% 
+    dplyr::distinct(occ_group_id, occ_subgroup_id)
+  
+  write.csv(occ_group_subgroup_xwalk, "occ_group_subgroup_xwalk.csv", row.names = FALSE)
+  
+  occ_subgroup <- df %>% 
+    dplyr::distinct(occ_subgroup, occ_subgroup_id)
+  
+  write.csv(occ_subgroup, "occ_subgroup_label.csv", row.names = FALSE)
+  
+  occ_subgroup_xwalk <- df %>% 
+    dplyr::distinct(occ_subgroup_id, occ_id)
+  
+  write.csv(occ_subgroup_xwalk, "occ_subgroup_xwalk.csv", row.names = FALSE)
+  
+  occ <- df %>% 
+    dplyr::distinct(occ, occ_id)
+  
+  write.csv(occ, "occ_label.csv", row.names = FALSE)
+
+  return(df) 
+}
+
+dm.occ_census_datausaio <- function(url, cnty_fips, table) {
+
+  occ_xwalk <- create.occ_xwalk(url = url, cnty_fips = cnty_fips)
+  
+  occ_census_vars <- scrape_html(table) %>%
+    dplyr::mutate(Label = tolower(Label)) %>%
+    dplyr::mutate(Label = gsub("total!!civilian employed population 16 years and over!!", "", Label),
+                  Label = gsub("educational", "education", Label),
+                  Label = gsub("firefighting", "fire fighting", Label))
+  
+  df <- stringr::str_split_fixed(occ_census_vars$Label, "!!", n = 3) %>% 
+    as.data.frame() %>% 
+    dplyr::mutate(V1 = as.character(V1),
+                  V2 = as.character(V2),
+                  V3 = as.character(V3),
+                  V3.1 = ifelse(V3 == "", V2, V3),
+                  V2.1 = ifelse(V3 == "", V1, V2),
+                  occ_group = tolower(V1),
+                  occ_subgroup = tolower(V2.1),
+                  occ = tolower(V3.1),
+                  Label = paste(occ_group, occ_subgroup, occ, sep = "!!")) %>% 
+    dplyr::bind_cols(occ_census_vars) %>% 
+    dplyr::select(c(Name, occ_group, occ_subgroup, occ, Label))
+
+  occ_xwalk <- occ_xwalk %>%
+    dplyr::left_join(df %>% 
+                       dplyr::select(Name, Label)) %>% 
+    dplyr::rename(var = Name) %>%
+    dplyr::select(var, occ, occ_id)
+  
+  return(occ_xwalk)
+  
 }
