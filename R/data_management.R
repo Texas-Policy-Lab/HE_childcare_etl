@@ -104,3 +104,32 @@ census_call <- function(id_vars,
   
   return(df)
 }
+
+#' @title Get data from datausaio
+#' @export
+datausaio <- function(url, cnty_fips) {
+
+  l2 <- lapply(cnty_fips, function(fips, url) {
+
+    url <- glue::glue(url, fips = fips)
+
+    raw <- RCurl::getURL(url)
+
+    json <- rjson::fromJSON(raw)
+
+    data <- json[[1]]
+
+    meta <- json[[2]]
+
+    l <- lapply(1:length(data), function(x) {do.call(cbind, data[[x]])})
+
+    df <- do.call(rbind, l) %>% 
+      as.data.frame()
+  }, url = url)
+
+  df <- do.call(rbind, l2) %>% 
+    as.data.frame()
+  
+  # write.csv(df, "./data/employment_industry_txcounty.csv", row.names = F)
+
+}
