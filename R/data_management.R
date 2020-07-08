@@ -133,12 +133,38 @@ datausaio <- function(url, cnty_fips) {
 
 #' @title Create industry crosswalk
 create.ind_xwalk <- function(url, cnty_fips) {
-  
+
   df <- datausaio(url, cnty_fips) %>% 
-    dplyr::distinct(`ID Group`, Group, `ID Industry`, Industry)
-  
+    dplyr::distinct(`ID Group`, Group, `ID Industry`, Industry) %>% 
+    dplyr::rename(ind_group_id = `ID Group`,
+                  ind_group = Group,
+                  ind_id = `ID Industry`,
+                  ind = Industry) %>% 
+    dplyr::mutate(ind_group = tolower(ind_group),
+                  ind = tolower(ind),
+                  ind_group = gsub("&", "and", ind_group),
+                  ind = gsub("&", "and", ind),
+                  Label = ifelse(grepl("(group)", ind_group), paste(ind, ind, sep = "!!"),
+                                 paste(ind_group, ind, sep = "!!"))
+  )
+
   write.csv(df, "./data/ind_xwalk.csv", row.names = FALSE)
-  
+
+  ind_group <- df %>% 
+    dplyr::distinct(ind_group, ind_group_id)
+
+  write.csv(ind_group, "./data/ind_group_label.csv", row.names = FALSE)
+
+  ind_group_xwalk <- df %>% 
+    dplyr::distinct(ind_group_id, ind_id)
+
+  write.csv(ind_group_xwalk, "./data/ind_group_xwalk.csv", row.names = FALSE)
+
+  ind <- df %>% 
+    dplyr::distinct(ind, ind_id)
+
+  write.csv(ind, "./data/ind_label.csv", row.names = FALSE)
+
   return(df)
 }
 
@@ -162,37 +188,69 @@ create.occ_xwalk <- function(url, cnty_fips) {
                   Label = paste(occ_group, occ_subgroup, occ, sep = "!!"),
                   Label = gsub("educational", "education", Label),
                   Label = gsub("firefighting", "fire fighting", Label))
-  
+
   write.csv(occ_xwalk, "./data/occ_xwalk.csv", row.names = FALSE)
-  
+
   occ_group <- df %>% 
     dplyr::distinct(occ_group, occ_group_id)
-  
-  write.csv(occ_group, "occ_group_label.csv", row.names = FALSE)
-  
+
+  write.csv(occ_group, "./data/occ_group_label.csv", row.names = FALSE)
+
   occ_group_subgroup_xwalk <- df %>% 
     dplyr::distinct(occ_group_id, occ_subgroup_id)
-  
-  write.csv(occ_group_subgroup_xwalk, "occ_group_subgroup_xwalk.csv", row.names = FALSE)
-  
+
+  write.csv(occ_group_subgroup_xwalk, "./data/occ_group_subgroup_xwalk.csv", row.names = FALSE)
+
   occ_subgroup <- df %>% 
     dplyr::distinct(occ_subgroup, occ_subgroup_id)
-  
-  write.csv(occ_subgroup, "occ_subgroup_label.csv", row.names = FALSE)
-  
+
+  write.csv(occ_subgroup, "./data/occ_subgroup_label.csv", row.names = FALSE)
+
   occ_subgroup_xwalk <- df %>% 
     dplyr::distinct(occ_subgroup_id, occ_id)
-  
-  write.csv(occ_subgroup_xwalk, "occ_subgroup_xwalk.csv", row.names = FALSE)
-  
+
+  write.csv(occ_subgroup_xwalk, "./data/occ_subgroup_xwalk.csv", row.names = FALSE)
+
   occ <- df %>% 
     dplyr::distinct(occ, occ_id)
-  
-  write.csv(occ, "occ_label.csv", row.names = FALSE)
+
+  write.csv(occ, "./data/occ_label.csv", row.names = FALSE)
 
   return(df) 
 }
 
+#' @title Create occupation crosswalk between census variable names and dataio industry categories
+dm.ind_census_datausaio <- function(url, cnty_fips, table) {
+  
+  ind_xwalk <- create.ind_xwalk(url = url, cnty_fips = cnty_fips)
+  
+  ind_census_vars <- scrape_html(table) %>% 
+    dplyr::mutate(Label = tolower(Label)) %>% 
+    dplyr::mutate(Label = gsub("total!!civilian employed population 16 years and over!!", "", Label))
+  
+   df <- stringr::str_split_fixed(ind_census_vars$Label, "!!", n = 2) %>% 
+    as.data.frame() %>% 
+    dplyr::mutate(V1 = as.character(V1),
+                  V2 = as.character(V2),
+                  V2.1 = ifelse(V2 == "", V1, V2),
+                  ind_group = tolower(V1),
+                  ind = tolower(V2.1),
+                  Label = paste(ind_group, ind, sep = "!!")) %>% 
+    dplyr::bind_cols(ind_census_vars) %>% 
+    dplyr::select(c(Name, ind_group, ind, Label))
+  
+  ind_xwalk <- ind_xwalk %>%
+    dplyr::left_join(df %>% 
+                       dplyr::select(Name, Label)) %>% 
+    dplyr::rename(var = Name) %>%
+    dplyr::select(var, ind, ind_id)
+  
+  assertthat::assert_that(sum(is.na(ind_xwalk$Name)) == 0)
+  
+  return(ind_xwalk)
+}
+
+#' @title Create occupation crosswalk between census variable names and dataio occupation categories
 dm.occ_census_datausaio <- function(url, cnty_fips, table) {
 
   occ_xwalk <- create.occ_xwalk(url = url, cnty_fips = cnty_fips)
@@ -222,6 +280,8 @@ dm.occ_census_datausaio <- function(url, cnty_fips, table) {
                        dplyr::select(Name, Label)) %>% 
     dplyr::rename(var = Name) %>%
     dplyr::select(var, occ, occ_id)
+  
+  assertthat::assert_that(sum(is.na(occ_xwalk$Name)) == 0)
   
   return(occ_xwalk)
   
