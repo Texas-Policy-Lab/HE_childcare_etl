@@ -13,7 +13,7 @@ occ_reopening <- readr::read_csv("./data/occupation_reopening_pct.csv") %>%
 
 ind_reopening <- readr::read_csv("./data/industry_reopening_pct.csv") %>% 
   tidyr::gather(phase, pct, -c(ind, ind_id)) %>% 
-  dplyr::mutate(ind_id = as.as.character(ind_id))
+  dplyr::mutate(ind_id = as.character(ind_id))
 
 occ_xwalk <- dm.occ_census_datausaio(url = config$occ,
                                      cnty_fips = cnty$county_fips,
