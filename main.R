@@ -23,20 +23,36 @@ ind_xwalk <- dm.ind_census_datausaio(url = config$ind,
                                      cnty_fips = cnty$county_fips,
                                      table = "S2403")
 
-occ <- census_call(id_vars = c("TRACT", "COUNTY"),
-                   value_vars = occ_xwalk$var,
-                   key = key$census) %>%
+occ <- census_call.acs5.subject(id_vars = c("TRACT", "COUNTY"),
+                                value_vars = occ_xwalk$var,
+                                key = key$census) %>%
   dplyr::select(-c(tract, county, state)) %>% 
   tidyr::gather(var, n_workers, -c(TRACT, COUNTY)) %>% 
   dplyr::left_join(occ_xwalk) %>%
   dplyr::mutate(occ_id = as.character(occ_id)) %>% 
-  dplyr::left_join(occ_reopening)
+  dplyr::left_join(occ_reopening %>% 
+                     dplyr::select(-occ)) %>% 
+  dplyr::mutate(adj_n_workers = (n_workers*pct)/100)
 
-ind <- census_call(id_vars = c("TRACT", "COUNTY"),
-                   value_vars = ind_xwalk$var,
-                   key = key$census) %>% 
+ind <- census_call.acs5.subject(id_vars = c("TRACT", "COUNTY"),
+                                value_vars = ind_xwalk$var,
+                                key = key$census) %>% 
   dplyr::select(-c(tract, county, state)) %>% 
   tidyr::gather(var, n_workers, -c(TRACT, COUNTY)) %>% 
   dplyr::left_join(ind_xwalk) %>% 
   dplyr::mutate(ind_id = as.character(ind_id)) %>% 
-  dplyr::left_join(ind_reopening)
+  dplyr::left_join(ind_reopening %>% 
+                     dplyr::select(-ind)) %>% 
+  dplyr::mutate(adj_n_workers = (n_workers*pct)/100)
+
+n_kids_working_parents <- data_dictionary.acs5(table = "B23008")
+n_kids_working_parents_df <- census_call.acs5(id_vars = c("TRACT", "COUNTY"),
+                           value_vars = n_kids_working_parents$Name,
+                           key = key$census) %>% 
+  dplyr::select(-c(tract, county, state))
+
+n_kids_poverty <- data_dictionary.acs5(table = "B17024")
+n_kids_poverty_df <- census_call.acs5(id_vars = c("TRACT", "COUNTY"),
+                           value_vars = n_kids_poverty$Name,
+                           key = key$census) %>% 
+  dplyr::select(-c(tract, county, state))
