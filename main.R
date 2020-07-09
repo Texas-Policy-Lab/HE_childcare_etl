@@ -45,14 +45,11 @@ ind <- census_call.acs5.subject(id_vars = c("TRACT", "COUNTY"),
                      dplyr::select(-ind)) %>% 
   dplyr::mutate(adj_n_workers = (n_workers*pct)/100)
 
-n_kids_working_parents <- data_dictionary.acs5(table = "B23008")
-n_kids_working_parents_df <- census_call.acs5(id_vars = c("TRACT", "COUNTY"),
-                           value_vars = n_kids_working_parents$Name,
-                           key = key$census) %>% 
-  dplyr::select(-c(tract, county, state))
+n_kids_wwp <- dm.kids_working_parents(table = "B23008",
+                                      id_vars = c("TRACT", "COUNTY"),
+                                      key = key$census)
 
-n_kids_poverty <- data_dictionary.acs5(table = "B17024")
-n_kids_poverty_df <- census_call.acs5(id_vars = c("TRACT", "COUNTY"),
-                           value_vars = n_kids_poverty$Name,
-                           key = key$census) %>% 
-  dplyr::select(-c(tract, county, state))
+n_kids_li <- dm.kids_low_income(table = "B17024",
+                                id_vars = c("TRACT", "COUNTY"),
+                                key = key$census)
+

@@ -328,3 +328,84 @@ dm.occ_census_datausaio <- function(url, cnty_fips, table) {
   return(occ_xwalk)
   
 }
+
+#' @title Create number of kids with workinng parents data
+dm.kids_working_parents <- function(table = "B23008",
+                                    id_vars,
+                                    key) {
+  
+  n_kids_wwp <- data_dictionary.acs5(table = table)
+  
+  df <- stringr::str_split_fixed(n_kids_wwp$Label, "!!", n = 4) %>% 
+    as.data.frame() %>%
+    dplyr::bind_cols(n_kids_wwp %>% 
+                       dplyr::select(Name)) %>% 
+    dplyr::filter(V2 == "Under 6 years") %>% 
+    dplyr::mutate(n_kids_wwp = ifelse(grepl("in labor force", tolower(V4)) & !grepl("neither|not", tolower(V4)), 1, 0),
+                  n_kids = ifelse(V3 == "", 1, 0)
+    ) %>% 
+    dplyr::filter(n_kids_wwp == 1 | n_kids == 1) %>% 
+    dplyr::select(-dplyr::starts_with("V"))
+
+  n_kids_wwp_df <- census_call.acs5(id_vars = id_vars,
+                                    value_vars = df$Name,
+                                    key = key) %>% 
+    dplyr::select(-c(tract, county, state)) %>% 
+    tidyr::gather(variable, value, -c(COUNTY, TRACT)) %>% 
+    dplyr::left_join(df %>% 
+                       tidyr::gather(var_type, value, -Name) %>% 
+                       dplyr::rename(variable = Name) %>% 
+                       dplyr::filter(value == 1) %>% 
+                       dplyr::select(-value)
+                     ) %>% 
+    dplyr::group_by(COUNTY, TRACT, var_type) %>% 
+    dplyr::summarise(n_under6 = sum(value)) %>% 
+    dplyr::mutate(n_under5 = (5/6)*n_under6) %>% 
+    dplyr::select(-n_under6) %>% 
+    tidyr::spread(var_type, n_under5) %>% 
+    dplyr::mutate(pct_wwp = n_kids_wwp/n_kids,
+                  pct_wwp = ifelse(is.na(pct_wwp), 0, pct_wwp)) %>% 
+    dplyr::rename(n_kids_under5 = n_kids,
+                  n_kids_under5_wwp = n_kids_wwp)
+
+  return(n_kids_wwp_df)
+}
+
+#' @table
+dm.kids_low_income <- function(table = "B17024",
+                               id_vars,
+                               key) {
+
+  n_kids_li <- data_dictionary.acs5(table = table)
+  
+  df <- stringr::str_split_fixed(n_kids_li$Label, "!!", n = 3) %>% 
+    as.data.frame() %>%
+    dplyr::bind_cols(n_kids_li %>% 
+                       dplyr::select(Name)) %>% 
+    dplyr::filter(V2 == "Under 6 years") %>% 
+    dplyr::slice(1:9) %>% 
+    dplyr::mutate(n_kids = ifelse(V3 == "", 1, 0),
+                  n_li_kids = ifelse(V3 != "", 1, 0)) %>% 
+    dplyr::select(-dplyr::starts_with("V"))
+  
+  n_kids_li_df <- census_call.acs5(id_vars = id_vars,
+                                   value_vars = df$Name,
+                                   key = key) %>% 
+    dplyr::select(-c(tract, county, state)) %>% 
+    tidyr::gather(variable, value, -c(TRACT, COUNTY)) %>% 
+    dplyr::left_join(df %>% 
+                       tidyr::gather(var_type, value, -Name) %>% 
+                       dplyr::rename(variable = Name) %>% 
+                       dplyr::filter(value == 1) %>% 
+                       dplyr::select(-value)) %>% 
+    dplyr::group_by(COUNTY, TRACT, var_type) %>% 
+    dplyr::summarise(n_under6 = sum(value)) %>%
+    dplyr::mutate(n_under5 = (5/6)*n_under6) %>% 
+    dplyr::select(-n_under6) %>% 
+    tidyr::spread(var_type, n_under5) %>% 
+    dplyr::mutate(pct_li = n_li_kids/n_kids,
+                  pct_li = ifelse(is.na(pct_li), 0, pct_li)) %>% 
+    dplyr::rename(n_kids_under5 = n_kids,
+                  n_li_kids_under5 = n_li_kids) 
+  
+}
