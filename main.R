@@ -32,7 +32,9 @@ occ <- census_call.acs5.subject(id_vars = c("TRACT", "COUNTY"),
   dplyr::mutate(occ_id = as.character(occ_id)) %>% 
   dplyr::left_join(occ_reopening %>% 
                      dplyr::select(-occ)) %>% 
-  dplyr::mutate(adj_n_workers = (n_workers*pct)/100)
+  dplyr::mutate(adj_n_workers = (n_workers*pct)/100) %>% 
+  dplyr::group_by(TRACT, COUNTY, phase) %>% 
+  dplyr::summarise(adj_n_workers = sum(adj_n_workers))
 
 ind <- census_call.acs5.subject(id_vars = c("TRACT", "COUNTY"),
                                 value_vars = ind_xwalk$var,
@@ -43,7 +45,9 @@ ind <- census_call.acs5.subject(id_vars = c("TRACT", "COUNTY"),
   dplyr::mutate(ind_id = as.character(ind_id)) %>% 
   dplyr::left_join(ind_reopening %>% 
                      dplyr::select(-ind)) %>% 
-  dplyr::mutate(adj_n_workers = (n_workers*pct)/100)
+  dplyr::mutate(adj_n_workers = (n_workers*pct)/100) %>% 
+  dplyr::group_by(TRACT, COUNTY, phase) %>% 
+  dplyr::summarise(adj_n_workers = sum(adj_n_workers))
 
 n_kids_wwp <- dm.kids_working_parents(table = "B23008",
                                       id_vars = c("TRACT", "COUNTY"),
