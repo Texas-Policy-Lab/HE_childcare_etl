@@ -1,15 +1,20 @@
 library(osrm)
 library(magrittr)
 
-df <- readr::read_csv("./data/family_zip_prvdr.csv") %>%
+config <- yaml::read_yaml("config.yaml")
+
+df <- readr::read_csv(file.path(config$data_pth, "family_zip_prvdr.csv")) %>%
   tidyr::drop_na(ParentsID) %>%
   dplyr::mutate(familyzip = as.character(Parents.FamilyZip))
 
-temp <- readr::read_tsv("./data/2019_Gaz_zcta_national.txt") %>%
+assertthat::assert_that(sum(is.na(df$Parents.FamilyZip)) == 0)
+
+temp <- readr::read_tsv(file.path(config$data_pth, "2019_Gaz_zcta_national.txt")) %>%
   dplyr::mutate(familyzip = as.character(GEOID))
 
 df <- df %>%
-  dplyr::left_join(dplyr::select(temp, familyzip, INTPTLAT, INTPTLONG), by = c("familyzip"))
+  dplyr::left_join(temp %>% 
+                     dplyr::select(familyzip, INTPTLAT, INTPTLONG), by = c("familyzip"))
 
 a <- df %>%
   dplyr::distinct(operation_number, .keep_all=TRUE) %>%
@@ -27,6 +32,8 @@ b <- df %>%
 options(osrm.server = "http://router.project-osrm.org/", osrm.profile = "driving")
 timetables <- vector(mode = "list", length = length(a))
 
+## lapply or future lapply here
+
 for (i in 1:length(a)) {
   print(i)
   timetables[[i]] <- osrmTable(src = a[[i]], dst = b[[i]])
@@ -37,8 +44,13 @@ for (i in 1:length(a)) {
 
 data("berlin")
 
-A <- data.frame(id = 1:3, lon = rep(apotheke.df[1, c('lon')], 3), lat = rep(apotheke.df[1, c('lat')], 3), grp = c(1,2,3))
-B <- data.frame(apotheke.df[11:20,c("id","lon","lat")],  grp = rep(c(1,2,3), 4)[-1:-2])
+A <- data.frame(id = 1:3,
+                lon = rep(apotheke.df[1, c('lon')], 3),
+                lat = rep(apotheke.df[1, c('lat')], 3),
+                grp = c(1,2,3))
+
+B <- data.frame(apotheke.df[11:20,c("id","lon","lat")],
+                grp = rep(c(1,2,3), 4)[-1:-2])
 
 a <- A %>%
   dplyr::group_by(grp) %>%
