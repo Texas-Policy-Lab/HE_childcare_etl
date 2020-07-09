@@ -1,6 +1,6 @@
 #' @title Scrape census variables from the api website to avoid typos
 #' @export
-scrape_html <- function(table, url = "https://api.census.gov/data/2018/acs/acs5/subject/groups/{table}.html") {
+data_dictionary.census <- function(table, url) {
 
   url <- glue::glue(url, table = table)
   
@@ -28,6 +28,18 @@ scrape_html <- function(table, url = "https://api.census.gov/data/2018/acs/acs5/
   
 }
 
+data_dictionary.acs5.subject <- function(table, url = "https://api.census.gov/data/2018/acs/acs5/subject/groups/{table}.html") {
+  
+  df <- data_dictionary.census(table, url)
+  
+}
+
+data_dictionary.acs5 <- function(table, url = "https://api.census.gov/data/2018/acs/acs5/groups/{table}.html") {
+  
+  df <- data_dictionary.census(table, url)
+  
+}
+
 #' @title Split the variables into multiple lists that are less than 50 so the census api call can work
 #' @export
 split_call <- function(id_vars, value_vars) {
@@ -41,59 +53,89 @@ split_call <- function(id_vars, value_vars) {
   
 }
 
+census_call.acs5.subject <- function(id_vars,
+                                     value_vars,
+                                     key,
+                                     api = "https://api.census.gov/data/2018/acs/acs5/subject?get=") {
+  
+  df <- census_call(id_vars = id_vars,
+                    value_vars = value_vars,
+                    key = key,
+                    api = api) 
+  return(df)
+}
+
+census_call.acs5 <- function(id_vars,
+                             value_vars,
+                             key,
+                             api = "https://api.census.gov/data/2018/acs/acs5?get=") {
+
+  df <- census_call(id_vars = id_vars,
+                    value_vars = value_vars,
+                    key = key,
+                    api = api) 
+  return(df)
+}
+
+
 #' @title
 #' @export
 get_census_api_data <- function(value_vars,
                                 id_vars,
                                 key,
-                                api = "https://api.census.gov/data/2018/acs/acs5/subject?get=",
+                                api,
                                 tract_id = "*",
                                 state_id = "48") {
-  
+
   tract_str <- "&for=tract:{tract}"
   state_str <- "&in=state:{state}"
   key_str <- "&key={key}"
-  
+
   vars <- paste(c(id_vars, value_vars), collapse = ",")
-  
+
   url <- glue::glue(paste0(api, vars, tract_str, state_str, key_str), key = key,
                     tract = tract_id,
                     state = state_id)
-  
+
   r <- httr::GET(url)
+
+  if(r$status_code == 200) {
   
   c <- httr::content(r)
-  
-  cnames <- unlist(c[[1]])
-  
-  c[[1]] <- NULL
-  
-  x <- lapply(c, 
-              function(x) {do.call("cbind", x)
-              })
-  
-  df <- do.call("rbind.data.frame", x)
-  
-  names(df) <- cnames
-  
-  df[value_vars] <- apply(df[value_vars], 2, as.numeric)
-  df[id_vars] <- apply(df[id_vars], 2, as.character)
-  
-  return(df)
+
+    cnames <- unlist(c[[1]])
+
+    c[[1]] <- NULL
+
+    x <- lapply(c, 
+                function(x) {do.call("cbind", x)
+                })
+
+    df <- do.call("rbind.data.frame", x)
+
+    names(df) <- cnames
+
+    df[value_vars] <- apply(df[value_vars], 2, as.numeric)
+    df[id_vars] <- apply(df[id_vars], 2, as.character)
+
+    return(df)
+
+  }
 }
 
 #' @title Pull census data
 #' @export
 census_call <- function(id_vars,
                         value_vars,
-                        key) {
+                        key,
+                        api) {
 
   vars <- c(id_vars, value_vars)
 
   calls <- split_call(id_vars = id_vars,
                       value_vars = value_vars)
 
-  l <- lapply(calls, get_census_api_data, id_vars = id_vars, key = key)
+  l <- lapply(calls, get_census_api_data, id_vars = id_vars, key = key, api = api)
   
   df <- l %>% 
     purrr::reduce(dplyr::left_join)
@@ -189,7 +231,7 @@ create.occ_xwalk <- function(url, cnty_fips) {
                   Label = gsub("educational", "education", Label),
                   Label = gsub("firefighting", "fire fighting", Label))
 
-  write.csv(occ_xwalk, "./data/occ_xwalk.csv", row.names = FALSE)
+  write.csv(df, "./data/occ_xwalk.csv", row.names = FALSE)
 
   occ_group <- df %>% 
     dplyr::distinct(occ_group, occ_group_id)
@@ -224,7 +266,7 @@ dm.ind_census_datausaio <- function(url, cnty_fips, table) {
   
   ind_xwalk <- create.ind_xwalk(url = url, cnty_fips = cnty_fips)
   
-  ind_census_vars <- scrape_html(table) %>% 
+  ind_census_vars <- data_dictionary.acs5.subject(table) %>% 
     dplyr::mutate(Label = tolower(Label)) %>% 
     dplyr::mutate(Label = gsub("total!!civilian employed population 16 years and over!!", "", Label))
   
@@ -255,7 +297,7 @@ dm.occ_census_datausaio <- function(url, cnty_fips, table) {
 
   occ_xwalk <- create.occ_xwalk(url = url, cnty_fips = cnty_fips)
   
-  occ_census_vars <- scrape_html(table) %>%
+  occ_census_vars <- data_dictionary.acs5.subject(table) %>%
     dplyr::mutate(Label = tolower(Label)) %>%
     dplyr::mutate(Label = gsub("total!!civilian employed population 16 years and over!!", "", Label),
                   Label = gsub("educational", "education", Label),
