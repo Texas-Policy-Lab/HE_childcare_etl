@@ -1,6 +1,10 @@
 library(osrm)
 library(magrittr)
 
+getOption("osrm.server")
+options(osrm.server = "http://127.0.0.1:5000/",
+        osrm.profile = "driving")
+
 config <- yaml::read_yaml("config.yaml")
 
 df <- readr::read_csv(file.path(config$data_pth, "family_zip_prvdr.csv")) %>%
@@ -17,55 +21,50 @@ df <- df %>%
                      dplyr::select(familyzip, INTPTLAT, INTPTLONG), by = c("familyzip"))
 
 a <- df %>%
-  dplyr::slice(5) %>% 
   dplyr::distinct(operation_number, .keep_all=TRUE) %>%
   dplyr::group_by(operation_number) %>%
   dplyr::select(operation_number, longitude, latitude) %>%
   dplyr::group_split()
 
+names(a) <- a  %>% 
+  purrr::map(magrittr::extract("operation_number"))
+
 b <- df %>%
-  dplyr::slice(5) %>% 
   dplyr::group_by(operation_number) %>%
   dplyr::select(operation_number, ParentsID, INTPTLONG, INTPTLAT) %>%
   dplyr::group_split(.keep=FALSE)
 
-#make sure lists aligns
+names(b) <- names(a)
 
-options(osrm.server = "http://router.project-osrm.org/", osrm.profile = "driving")
-timetables <- vector(mode = "list", length = length(a))
+assertthat::assert_that(length(a) == length(b))
 
-## lapply or future lapply here
+x <- lapply(names(a), function(x) {osrm::osrmTable(src = a[[x]], dst = b[[x]])})
 
-for (i in 1:length(a)) {
-  print(i)
-  timetables[[i]] <- osrmTable(src = a[[i]], dst = b[[i]])
-  Sys.sleep(1)
-}
-
-#### DEMO
-
-data("berlin")
-
-A <- data.frame(id = 1:3,
-                lon = rep(apotheke.df[1, c('lon')], 3),
-                lat = rep(apotheke.df[1, c('lat')], 3),
-                grp = c(1,2,3))
-
-B <- data.frame(apotheke.df[11:20,c("id","lon","lat")],
-                grp = rep(c(1,2,3), 4)[-1:-2])
-
-a <- A %>%
-  dplyr::group_by(grp) %>%
-  dplyr::group_split()
-
-b <- B %>%
-  dplyr::group_by(grp) %>%
-  dplyr::group_split()
-
-t <- mapply(osrmTable, src=as.list(a), dst = as.list(b))
-
-distA2 <- osrmTable(src = apotheke.df[1,c("id","lon","lat")],
-                    dst = apotheke.df[11:20,c("id","lon","lat")])
-# First 5 rows and columns
-distA2$durations[1:5,1:5]
-
+# 
+# #### DEMO
+# 
+# data("berlin")
+# 
+# A <- data.frame(id = 1:3,
+#                 lon = rep(apotheke.df[1, c('lon')], 3),
+#                 lat = rep(apotheke.df[1, c('lat')], 3),
+#                 grp = c(1,2,3))
+# 
+# B <- data.frame(apotheke.df[11:20,c("id","lon","lat")],
+#                 grp = rep(c(1,2,3), 4)[-1:-2])
+# 
+# a <- A %>%
+#   dplyr::group_by(grp) %>%
+#   dplyr::group_split()
+# 
+# b <- B %>%
+#   dplyr::group_by(grp) %>%
+#   dplyr::group_split()
+# 
+# t <- mapply(osrmTable, src=as.list(a), dst = as.list(b))
+# 
+# 
+# distA2 <- osrmTable(src = apotheke.df[1,c("id","lon","lat")],
+#                     dst = apotheke.df[11:20,c("id","lon","lat")])
+# # First 5 rows and columns
+# distA2$durations
