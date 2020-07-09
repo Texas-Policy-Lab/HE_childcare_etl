@@ -10,7 +10,7 @@ config <- yaml::read_yaml("config.yaml")
 df <- readr::read_csv(file.path(config$data_pth, "family_zip_prvdr.csv")) %>%
   dplyr::rename(parent_id = ParentsID) %>% 
   tidyr::drop_na(ParentsID) %>%
-  dplyr::mutate(familyzip = as.character(Parents.FamilyZip))
+  dplyr::mutate(familyzip = stringr::str_pad(as.character(Parents.FamilyZip)), width = 5, side = "left", pad = "0")
 
 assertthat::assert_that(sum(is.na(df$Parents.FamilyZip)) == 0)
 
