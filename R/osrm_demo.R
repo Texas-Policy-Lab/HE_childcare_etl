@@ -8,6 +8,7 @@ options(osrm.server = "http://127.0.0.1:5000/",
 config <- yaml::read_yaml("config.yaml")
 
 df <- readr::read_csv(file.path(config$data_pth, "family_zip_prvdr.csv")) %>%
+  dplyr::rename(parent_id = ParentsID) %>% 
   tidyr::drop_na(ParentsID) %>%
   dplyr::mutate(familyzip = as.character(Parents.FamilyZip))
 
@@ -31,16 +32,27 @@ names(a) <- a  %>%
 
 b <- df %>%
   dplyr::group_by(operation_number) %>%
-  dplyr::select(operation_number, ParentsID, INTPTLONG, INTPTLAT) %>%
+  dplyr::select(operation_number, parent_id, INTPTLONG, INTPTLAT) %>%
   dplyr::group_split(.keep=FALSE)
 
 names(b) <- names(a)
 
 assertthat::assert_that(length(a) == length(b))
 
-x <- lapply(names(a), function(x) {osrm::osrmTable(src = a[[x]], dst = b[[x]])})
+result <- lapply(names(a)[1:5], function(x) {osrm::osrmTable(src = a[[x]], dst = b[[x]])})
 
-# 
+parse_osrm_result <- function(result) {
+ 
+  dur <- result[[1]]$durations
+  
+  dest <- result[[1]]$destinations
+ 
+  dest <- dest %>% 
+    dplyr::mutate(parent_id = row.names(dest),
+                  duration = dur)
+}
+
+
 # #### DEMO
 # 
 # data("berlin")
