@@ -1,13 +1,11 @@
 library(osrm)
 library(magrittr)
 
-setwd("//tpl-phi/Early_Childhood/26_HE/01_Childcare/")
-
-df <- readr::read_csv("family_zip_prvdr.csv") %>%
+df <- readr::read_csv("./data/family_zip_prvdr.csv") %>%
   tidyr::drop_na(ParentsID) %>%
   dplyr::mutate(familyzip = as.character(Parents.FamilyZip))
 
-temp <- readr::read_tsv("2019_Gaz_zcta_national.txt") %>%
+temp <- readr::read_tsv("./data/2019_Gaz_zcta_national.txt") %>%
   dplyr::mutate(familyzip = as.character(GEOID))
 
 df <- df %>%
