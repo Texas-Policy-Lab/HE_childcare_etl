@@ -17,12 +17,14 @@ df <- df %>%
                      dplyr::select(familyzip, INTPTLAT, INTPTLONG), by = c("familyzip"))
 
 a <- df %>%
+  dplyr::slice(5) %>% 
   dplyr::distinct(operation_number, .keep_all=TRUE) %>%
   dplyr::group_by(operation_number) %>%
   dplyr::select(operation_number, longitude, latitude) %>%
   dplyr::group_split()
 
 b <- df %>%
+  dplyr::slice(5) %>% 
   dplyr::group_by(operation_number) %>%
   dplyr::select(operation_number, ParentsID, INTPTLONG, INTPTLAT) %>%
   dplyr::group_split(.keep=FALSE)
@@ -62,8 +64,8 @@ b <- B %>%
 
 t <- mapply(osrmTable, src=as.list(a), dst = as.list(b))
 
-
 distA2 <- osrmTable(src = apotheke.df[1,c("id","lon","lat")],
                     dst = apotheke.df[11:20,c("id","lon","lat")])
 # First 5 rows and columns
 distA2$durations[1:5,1:5]
+
