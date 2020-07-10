@@ -57,3 +57,18 @@ n_kids_li <- dm.kids_low_income(table = "B17024",
                                 id_vars = c("TRACT", "COUNTY"),
                                 key = key$census)
 
+pop <- data_dictionary.acs5.subject(table = "S1101") %>% 
+  dplyr::slice(c(1:4, 6))
+
+pop_df <- census_call.acs5.subject(id_vars = pop$Name,
+                                   value_vars = c("TRACT", "COUNTY"),
+                                   key = key$census) %>% 
+  dplyr::rename(ttl_hhld = S1101_C01_001E,
+                avg_hhld = S1101_C01_002E,
+                ttl_fmly = S1101_C01_003E,
+                avg_fmly = S1101_C01_004E,
+                ttl_fmly_w_kids = S1101_C01_006E) %>% 
+  dplyr::mutate(n_kid_under12 = (n_kid_under18/18)*13,
+                n_ppl_hhld = n_pop/n_hhld,
+                pct_kid_under12 = (n_kid_under12/n_pop)*100,
+                n_kid_under12_per_100hhld = (n_kid_under12/n_hhld)*100)
