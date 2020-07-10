@@ -1,13 +1,13 @@
 library(osrm)
 library(magrittr)
 
-getOption("osrm.server")
-options(osrm.server = "http://127.0.0.1:5000/",
-        osrm.profile = "driving")
-
 config <- yaml::read_yaml("config.yaml")
 
 sapply(list.files("R", full.names = TRUE, recursive = TRUE), source, .GlobalEnv)
+
+getOption("osrm.server")
+options(osrm.server = config$port,
+        osrm.profile = "driving")
 
 df <- readr::read_csv(file.path(config$data_pth, "family_zip_prvdr.csv")) %>%
   dplyr::rename(parent_id = ParentsID) %>% 
