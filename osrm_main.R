@@ -22,7 +22,11 @@ temp <- readr::read_tsv(file.path(config$data_pth, "2019_Gaz_zcta_national.txt")
 
 df <- df %>%
   dplyr::left_join(temp %>% 
-                     dplyr::select(familyzip, INTPTLAT, INTPTLONG), by = c("familyzip"))
+                     dplyr::select(familyzip, INTPTLAT, INTPTLONG), by = c("familyzip")) %>% 
+  tidyr::drop_na(INTPTLONG, INTPTLAT)
+
+assertthat::assert_that(sum(is.na(df$INTPTLONG)) == 0)
+assertthat::assert_that(sum(is.na(df$INTPTLAT)) == 0)
 
 a <- df %>%
   dplyr::distinct(operation_number, .keep_all=TRUE) %>%
@@ -44,10 +48,10 @@ assertthat::assert_that(length(a) == length(b))
 
 result <- lapply(names(a), function(x) {osrm::osrmTable(src = a[[x]],
                                                         dst = b[[x]])})
-result <- plyr::compact(result)
 
 parse_result <- lapply(result, parse_osrm_table_result)
 
-df <- do.call("rbind", parse_result)
+df2 <- do.call("rbind", parse_result) %>% 
+  dplyr::rename(operation_number = src)
 
-write.csv(df, "./data/prvdr_family_compute_duration.csv", row.names = FALSE)
+write.csv(df, "./data/prvdr_family_commute_duration.csv", row.names = FALSE)
