@@ -42,8 +42,8 @@ names(b) <- names(a)
 
 assertthat::assert_that(length(a) == length(b))
 
-result <- lapply(names(a)[1:5], function(x) {osrm::osrmTable(src = a[[x]],
-                                                             dst = b[[x]])})
+result <- lapply(names(a), function(x) {osrm::osrmTable(src = a[[x]],
+                                                        dst = b[[x]])})
 
 parse_result <- lapply(result, parse_osrm_table_result)
 
