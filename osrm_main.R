@@ -11,9 +11,9 @@ options(osrm.server = config$port,
 
 df <- readr::read_csv(file.path(config$data_pth, "family_zip_prvdr.csv")) %>%
   dplyr::rename(parent_id = ParentsID) %>% 
-  tidyr::drop_na(ParentsID) %>%
-  dplyr::mutate(familyzip = stringr::str_pad(as.character(Parents.FamilyZip)),
-                width = 5, side = "left", pad = "0")
+  tidyr::drop_na(parent_id) %>%
+  dplyr::mutate(familyzip = stringr::str_pad(as.character(Parents.FamilyZip),
+                width = 5, side = "left", pad = "0"))
 
 assertthat::assert_that(sum(is.na(df$Parents.FamilyZip)) == 0)
 
@@ -44,7 +44,10 @@ assertthat::assert_that(length(a) == length(b))
 
 result <- lapply(names(a), function(x) {osrm::osrmTable(src = a[[x]],
                                                         dst = b[[x]])})
+result <- plyr::compact(result)
 
 parse_result <- lapply(result, parse_osrm_table_result)
 
 df <- do.call("rbind", parse_result)
+
+write.csv(df, "./data/prvdr_family_compute_duration.csv", row.names = FALSE)
