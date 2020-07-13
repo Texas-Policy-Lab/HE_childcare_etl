@@ -51,7 +51,7 @@ result <- lapply(names(a), function(x) {osrm::osrmTable(src = a[[x]],
 
 parse_result <- lapply(result, parse_osrm_table_result)
 
-df2 <- do.call("rbind", parse_result) %>% 
+df <- do.call("rbind", parse_result) %>% 
   dplyr::rename(operation_number = src)
 
 write.csv(df, "./data/prvdr_family_commute_duration.csv", row.names = FALSE)
