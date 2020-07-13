@@ -14,13 +14,28 @@ Right now, the data used on the osrm process are stored in c:/docker. This is no
 
 #### Run docker command
 
-1. Open a windows command prompt
-2. Copy and paste the below docker command
-3. You will know the server is running if you open the docker dashboards UI and a container named "osrm"
+1. Start docker by launching it from the windows search bar. Nothing will launch, which is confusing, but in the task bar you will see a little whale icon appear
+
+![launch_docker](./images/docker_icon.png)
+
+2. Make sure docker is using linux containers. Right click on the docker whale icon and it should have a setting that says 'switch to windows containers', which indicates linux containers are currently in use.
+
+![container](./images/container_type.png)
+
+3. Open a windows command prompt
+4. Copy and paste the below docker command
 
 ```
 docker run --name osrm -t -i -p 5000:5000 -v c:/docker:/data osrm/osrm-backend osrm-routed --algorithm mld /data/texas-latest.osrm
 ```
+
+5. You will know the server is running if you open the docker dashboards UI and a container named "osrm"
+
+![osrm](./images/osrm_running.png)
+
+6. Wait to run the R code until the server indicates it is waiting for requests
+
+![requests](./images/port_running.png)
 
 #### Run the R script
 
