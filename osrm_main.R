@@ -55,3 +55,28 @@ df <- do.call("rbind", parse_result) %>%
   dplyr::rename(operation_number = src)
 
 write.csv(df, "./data/prvdr_family_commute_duration.csv", row.names = FALSE)
+
+
+# Even filtering for neighboring counties only, there are families that say they are in e.g. Montogmery County, but their zipcode is in Dallas COunty
+
+#Montgomery 48339
+#Liberty 48291
+#Chambers 48071
+#Galveston 48167
+#Brazoria 48039
+#Fort Bend 48157
+#Waller 48473
+
+neighbors <- c(48201, 48339, 48291, 48071, 48167, 48039, 48157, 48473)
+
+commute <- readr::read_csv("./data/prvdr_family_commute_duration.csv") %>%
+  dplyr::left_join(df %>%
+                     dplyr::select(parent_id,
+                                   Parents.FamilyZip, Parents.FIPS) %>%
+                     dplyr::filter(Parents.FIPS %in% neighbors), by="parent_id") %>%
+  dplyr::group_by(Parents.FamilyZip) %>%
+  dplyr::summarise(count = dplyr::n(), mean = mean(duration), min = min(duration),
+                   q80 = quantile(duration, probs=0.8), FIPS = mode(Parents.FIPS)) %>%
+  tidyr::drop_na(Parents.FamilyZip)
+
+write.csv(df, "./data/commuting_times_zipcode.csv", row.names = FALSE)

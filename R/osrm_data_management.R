@@ -18,3 +18,10 @@ parse_osrm_table_result <- function(r) {
 
   return(df)
 }
+
+#' @title Calculates the mode
+#' @param codes
+#' @export
+mode <- function(codes){
+  which.max(tabulate(codes))
+}
