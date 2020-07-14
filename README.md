@@ -1,8 +1,25 @@
 # HE_childcare_etl
 
-## Stage 2
+## Data Management
+
+Run the `main_data_collection.R` script. Before you will be able to run it follow the steps listed below:
+
+### Geocodio API
+
+1. Sign up for geocodio API key
+2. Create a configuration file call api_key.yaml in the project root directory
+3. Add a parameter to the configuration file called geocodio: key: XXX so the file looks like the sample file below
+
+api_key.yaml
+```
+geocodio:
+  key: xxx
+
+```
 
 ### OSRM
+
+Now run the `osrm_main.R` script. Before you will be able to run it follow the steps listed below.
 
 OSRM (Open Source Routing Machine) is software developed to help people not only know the distance between two geographic coordinate points, but also the average duration of time between those two points.
 
