@@ -72,23 +72,23 @@ get.hhsc_ccl_data <-  function(data_name,
   df_all <- sapply(result$df_all, as.character) %>% 
     as.data.frame(stringsAsFactors = FALSE)
   
-  write.csv(df_all, "./data/HHSC_CLL.csv", row.names = FALSE)
-  
-  return(df_all)
-  
+  write.csv(df_all, file.path(data_in_pth, data_name), row.names = FALSE)
+
 }
 
 #' @title Get NBER Tract data
 #' @description Link to data: http://data.nber.org/distance/2010/sf1/tract/sf12010tractdistance25miles.csv
 #' @details We're using the 25 mile radius rather then the 5 miles radius because the 5 mile radius was missing two counties in Harris County
+#' @param data_name string. The name of the file to download
+#' @param data_in_pth string. The path to download the data to.
+#' @export 
 get.nber_tract_data <- function(data_name,
                                 data_in_pth,
-                                url = "http://data.nber.org/distance/2010/sf1/tract/{fl}",
-                                fl = "sf12010tractdistance25miles.csv") {
+                                url = "http://data.nber.org/distance/2010/sf1/tract/{fl}") {
 
-  dwnld_pth <- file.path("./data/", fl)
+  dwnld_pth <- file.path(data_in_pth, data_name)
 
-  download.file(glue::glue(url, fl = fl), dwnld_pth)
+  download.file(glue::glue(url, fl = data_name), dwnld_pth)
 }
 
 #' @title Get ACF data
@@ -96,14 +96,15 @@ get.nber_tract_data <- function(data_name,
 get.acf_data <- function(data_name,
                          data_in_pth,
                          url = "https://www.twc.texas.gov/files/partners/{fl}",
-                         fl = "acf-801-q{qtr}-2018-twc.xlsx",
                          qtr = 1:4) {
 
   lapply(qtr, function(q) {
 
-    dwnld_pth <- file.path("./data/", fl)
+    fl_name <- glue::glue(data_name, qtr = q)
+    
+    dwnld_pth <- file.path(data_in_pth, fl_name)
 
-    download.file(glue::glue(url, fl = glue::glue(fl, qtr = q)), dwnld_pth)
+    download.file(glue::glue(url, fl = fl_name), dwnld_pth)
 
   })
 
@@ -113,13 +114,59 @@ get.acf_data <- function(data_name,
 #' @description 
 #' @export
 get.kinder_neighborhood_tract_xwalk <- function(data_name,
-                                                data_out_pth,
+                                                data_in_pth,
                                                 pth = "https://www.datahouston.org/cta_crosswalk.txt") {
-  
-  df <- read.csv(url(pth)) %>% 
-    dplyr::rename(anchor_tract = GEOID10) %>% 
-    dplyr::rename_all(tolower) %>% 
+
+  df <- read.csv(url(pth)) %>%
+    dplyr::rename(anchor_tract = GEOID10) %>%
+    dplyr::rename_all(tolower) %>%
     dplyr::select(-id)
+
+  write.csv(df, file.path(data_in_pth, data_name), row.names = FALSE)
+}
+
+#' @title Get tract by latitude and longitude
+#' @export
+get.tract_shape <- function(data_name,
+                            data_in_pth,
+                            state = 48,
+                            county = 201) {
+
+  if(!require("tigris", character.only = TRUE)) {
+   install.packages("tigris") 
+  }
+
+  geo <- tigris::tracts(state = state, county = county, cb = TRUE)
+
+  shape <- lapply(geo$GEOID, function(id) {
+
+    x <- geo %>% 
+      dplyr::filter(GEOID == id) %>% 
+      dplyr::select(geometry)
+
+    x <- x[[1]][[1]][[1]][[1]] %>% 
+      as.data.frame() %>% 
+      dplyr::rename(longitude = V1,
+                    latitude = V2) %>% 
+      dplyr::mutate(GEOID = id)
+
+  })
+
+  geo <- geo %>% 
+    dplyr::right_join(do.call(rbind, shape)) %>% 
+    dplyr::select(-geometry) %>% 
+    dplyr::rename_all(tolower) %>% 
+    dplyr::rename(anchor_tract = geoid)
+
+  write.csv(geo, file.path(data_in_pth, data_name), row.names = FALSE)
+}
+
+#' @title Get Zip shape
+#' @export
+get.zip_shape <- function(data_name,
+                          data_in_pth,
+                          state = 48) {
+
+  geo <- tigris::zctas(state = state, cb = TRUE)
   
-  return(df)
 }
