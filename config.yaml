@@ -2,8 +2,6 @@ data_pth: "M:/26_HE/01_Childcare/Data"
 
 port: "http://127.0.0.1:5000/"
 
-bordering_counties: ["Harris", "Montgomery", "Fort Bend", "Brazoria", "Galveston", "Waller", "Liberty", "Chambers"]
-
 data_pths:
   in_pth: "M:/26_HE/01_Childcare/Data_Curated"
   out_pth: "M:/26_HE/01_Childcare/Data_Current"
@@ -15,3 +13,4 @@ data_names:
   kinder_neighborhoods: "tract_neighborhood_xwalk.csv"
   tract_shape: "tract_shape.csv"
   zip_shape: "zip_shape.csv"
+  state_fips_state_name_xwalk: "state_fips_state_name_xwalk.csv"

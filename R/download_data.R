@@ -132,9 +132,7 @@ get.tract_shape <- function(data_name,
                             state = 48,
                             county = 201) {
 
-  if(!require("tigris", character.only = TRUE)) {
-   install.packages("tigris") 
-  }
+  dwnld_pkg(pkg_name = "tigris")
 
   geo <- tigris::tracts(state = state, county = county, cb = TRUE)
 
@@ -159,6 +157,23 @@ get.tract_shape <- function(data_name,
     dplyr::rename(anchor_tract = geoid)
 
   write.csv(geo, file.path(data_in_pth, data_name), row.names = FALSE)
+}
+
+#' @title Get State FIPS and State Name Crosswalk
+#' @export
+get.state_fips_state_name_xwalk <- function(data_name,
+                                            data_in_pth) {
+
+  dwnld_pkg(pkg_name = "tigris")
+  
+  cnty <- tigris::counties(state = 48) %>% 
+    dplyr::select(NAME, NAMELSAD, COUNTYFP) %>% 
+    dplyr::rename(COUNTY_FIPS = COUNTYFP) %>% 
+    dplyr::rename_all(tolower)
+  
+  assertthat::assert_that(nrow(cnty) == 254)
+  
+  write.csv(cnty, file.path(data_in_pth, data_name), row.names = FALSE)
 }
 
 #' @title Get Zip shape
