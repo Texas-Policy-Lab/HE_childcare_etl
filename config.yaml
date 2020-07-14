@@ -1,3 +1,17 @@
 data_pth: "M:/26_HE/01_Childcare/Data"
 
 port: "http://127.0.0.1:5000/"
+
+bordering_counties: ["Harris", "Montgomery", "Fort Bend", "Brazoria", "Galveston", "Waller", "Liberty", "Chambers"]
+
+data_pths:
+  in_pth: "M:/26_HE/01_Childcare/Data_Curated"
+  out_pth: "M:/26_HE/01_Childcare/Data_Current"
+  
+data_names:
+  nber: "sf12010tractdistance25miles.csv"
+  acf: "acf-801-q{qtr}-2018-twc.xlsx"
+  ccl: "HHSC_CLL.csv"
+  kinder_neighborhoods: "tract_neighborhood_xwalk.csv"
+  tract_shape: "tract_shape.csv"
+  zip_shape: "zip_shape.csv"
