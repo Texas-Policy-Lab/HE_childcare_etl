@@ -1,8 +1,14 @@
 # HE_childcare_etl
 
+## Download data
+
+Run the `download_data_main.R` script. It will take awhile to download all the data.
+
+Information about the data is recorded in Confluence [here](https://tpldocs.rice.edu/display/HEC/Data+v2.0).
+
 ## Data Management
 
-Run the `main_data_collection.R` script. Before you will be able to run it follow the steps listed below:
+Run the `manage_data_main.R` script. Before you will be able to run it follow the steps listed below:
 
 ### Geocodio API
 
