@@ -35,6 +35,8 @@ unlist_hhsc_ccl_data <- function(c) {
 
 #' @title Returns the most recent HHSC CLL Daycare and Residential Operations Data
 #' @description Link to data: https://data.texas.gov/Social-Services/HHSC-CCL-Daycare-and-Residential-Operations-Data/bc5r-88dy/data
+#' @param data_name string. The name to of the data to read in.
+#' @param data_in_pth string. The path to read the data in from.
 #' @export
 get.hhsc_ccl_data <-  function(data_name,
                                data_in_pth,
@@ -79,8 +81,8 @@ get.hhsc_ccl_data <-  function(data_name,
 #' @title Get NBER Tract data
 #' @description Link to data: http://data.nber.org/distance/2010/sf1/tract/sf12010tractdistance25miles.csv
 #' @details We're using the 25 mile radius rather then the 5 miles radius because the 5 mile radius was missing two counties in Harris County
-#' @param data_name string. The name of the file to download
-#' @param data_in_pth string. The path to download the data to.
+#' @param data_name string. The name of the file to download.
+#' @param data_in_pth string. The path to read the data in from.
 #' @export 
 get.nber_tract_data <- function(data_name,
                                 data_in_pth,
@@ -93,6 +95,9 @@ get.nber_tract_data <- function(data_name,
 
 #' @title Get ACF data
 #' @description Link to data: https://www.twc.texas.gov/programs/childcare#dataAndReports
+#' @param data_name string. The name to of the data to read in.
+#' @param data_in_pth string. The path to read the data in from.
+#' @export
 get.acf_data <- function(data_name,
                          data_in_pth,
                          url = "https://www.twc.texas.gov/files/partners/{fl}",
@@ -111,7 +116,9 @@ get.acf_data <- function(data_name,
 }
 
 #' @title Get the neighborhood to census tract data
-#' @description 
+#' @description Download the neighbordhood to census tract cross walk create by the Kinder Institute. https://www.arcgis.com/apps/MapSeries/index.html?appid=95320b06677c438d91027cb5feb241bf
+#' @param data_name string. The name to of the data to read in.
+#' @param data_in_pth string. The path to read the data in from.
 #' @export
 get.kinder_neighborhood_tract_xwalk <- function(data_name,
                                                 data_in_pth,
@@ -126,16 +133,18 @@ get.kinder_neighborhood_tract_xwalk <- function(data_name,
 }
 
 #' @title Get tract by latitude and longitude
-#' @description use geom_sf for plotting with a shape file
+#' @description Downloads shape file for Harris County (201) Texas (48) using the tigris package, which pulls the most recent shape from the United States Census Bureau.
+#' @param data_name string. The name to of the data to read in.
+#' @param data_in_pth string. The path to read the data in from.
 #' @export
 get.tract_shape <- function(data_name,
                             data_in_pth,
-                            state = 48,
-                            county = 201) {
+                            state_fips = 48,
+                            county_fips = 201) {
 
   dwnld_pkg(pkg_name = "tigris")
 
-  geo <- tigris::tracts(state = state, county = county, cb = TRUE)
+  geo <- tigris::tracts(state = state_fips, county = county_fips, cb = TRUE)
 
   geo <- geo %>% 
     dplyr::rename_all(tolower) %>% 
@@ -145,13 +154,17 @@ get.tract_shape <- function(data_name,
 }
 
 #' @title Get State FIPS and State Name Crosswalk
+#' @description Downloads the crosswalk between county fips codes and county names for Texas
+#' @param data_name string. The name to of the data to read in.
+#' @param data_in_pth string. The path to read the data in from.
 #' @export
 get.state_fips_state_name_xwalk <- function(data_name,
-                                            data_in_pth) {
+                                            data_in_pth,
+                                            state_fips = 48) {
 
   dwnld_pkg(pkg_name = "tigris")
 
-  cnty <- tigris::counties(state = 48) %>% 
+  cnty <- tigris::counties(state = state_fips) %>% 
     dplyr::select(NAME, NAMELSAD, COUNTYFP) %>% 
     dplyr::rename(COUNTY_FIPS = COUNTYFP) %>% 
     dplyr::rename_all(tolower)
@@ -163,7 +176,9 @@ get.state_fips_state_name_xwalk <- function(data_name,
   write.csv(cnty, file.path(data_in_pth, data_name), row.names = FALSE)
 }
 
-#' @title Get Zip shape
+#' @title Get ZIP shape
+#' @param data_name string. The name to of the data to read in.
+#' @param data_in_pth string. The path to read the data in from.
 #' @export
 get.zip_shape <- function(data_name,
                           data_in_pth,
