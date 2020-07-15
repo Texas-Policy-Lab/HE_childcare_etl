@@ -126,6 +126,7 @@ get.kinder_neighborhood_tract_xwalk <- function(data_name,
 }
 
 #' @title Get tract by latitude and longitude
+#' @description use geom_sf for plotting with a shape file
 #' @export
 get.tract_shape <- function(data_name,
                             data_in_pth,
@@ -136,23 +137,7 @@ get.tract_shape <- function(data_name,
 
   geo <- tigris::tracts(state = state, county = county, cb = TRUE)
 
-  shape <- lapply(geo$GEOID, function(id) {
-
-    x <- geo %>% 
-      dplyr::filter(GEOID == id) %>% 
-      dplyr::select(geometry)
-
-    x <- x[[1]][[1]][[1]][[1]] %>% 
-      as.data.frame() %>% 
-      dplyr::rename(longitude = V1,
-                    latitude = V2) %>% 
-      dplyr::mutate(GEOID = id)
-
-  })
-
   geo <- geo %>% 
-    dplyr::right_join(do.call(rbind, shape)) %>% 
-    dplyr::select(-geometry) %>% 
     dplyr::rename_all(tolower) %>% 
     dplyr::rename(anchor_tract = geoid)
 
@@ -165,14 +150,16 @@ get.state_fips_state_name_xwalk <- function(data_name,
                                             data_in_pth) {
 
   dwnld_pkg(pkg_name = "tigris")
-  
+
   cnty <- tigris::counties(state = 48) %>% 
     dplyr::select(NAME, NAMELSAD, COUNTYFP) %>% 
     dplyr::rename(COUNTY_FIPS = COUNTYFP) %>% 
     dplyr::rename_all(tolower)
   
+  sf::st_geometry(cnty) <- NULL
+
   assertthat::assert_that(nrow(cnty) == 254)
-  
+
   write.csv(cnty, file.path(data_in_pth, data_name), row.names = FALSE)
 }
 
