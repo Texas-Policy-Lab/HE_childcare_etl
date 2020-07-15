@@ -10,19 +10,6 @@ Information about the data is recorded in Confluence [here](https://tpldocs.rice
 
 Run the `manage_data_main.R` script. Before you will be able to run it follow the steps listed below:
 
-### Geocodio API
-
-1. Sign up for geocodio API key
-2. Create a configuration file call api_key.yaml in the project root directory
-3. Add a parameter to the configuration file called geocodio: key: XXX so the file looks like the sample file below
-
-api_key.yaml
-```
-geocodio:
-  key: xxx
-
-```
-
 ### OSRM
 
 Now run the `osrm_main.R` script. Before you will be able to run it follow the steps listed below.
