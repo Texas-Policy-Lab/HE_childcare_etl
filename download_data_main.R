@@ -21,6 +21,4 @@ get.tract_shape(data_in_name = config$data_in_names$tract_shape,
                 data_in_pth = data_in_pth)
 
 get.state_fips_state_name_xwalk(data_in_name = config$data_in_names$state_fips_state_name_xwalk,
-                                data_in_pth)                              
-             
- 
+                                data_in_pth)
