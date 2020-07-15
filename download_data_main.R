@@ -1,4 +1,5 @@
 config <- yaml::read_yaml("config.yaml")
+api_key <- yaml::read_yaml("api_key.yaml")
 
 sapply(list.files("R", full.names = TRUE, recursive = TRUE), source, .GlobalEnv)
 
