@@ -18,6 +18,8 @@ get.kinder_neighborhood_tract_xwalk(data_name = config$data_names$kinder_neighbo
 
 get.tract_shape(data_name = config$data_names$tract_shape,
                 data_in_pth = data_in_pth)
-                               
+
+get.state_fips_state_name_xwalk(data_name = config$data_names$state_fips_state_name_xwalk,
+                                data_in_pth)                              
              
  
