@@ -1,8 +1,18 @@
 # HE_childcare_etl
 
-## Stage 2
+## Download data
+
+Run the `download_data_main.R` script. It will take awhile to download all the data.
+
+Information about the data is recorded in Confluence [here](https://tpldocs.rice.edu/display/HEC/Data+v2.0).
+
+## Data Management
+
+Run the `manage_data_main.R` script. Before you will be able to run it follow the steps listed below:
 
 ### OSRM
+
+Now run the `osrm_main.R` script. Before you will be able to run it follow the steps listed below.
 
 OSRM (Open Source Routing Machine) is software developed to help people not only know the distance between two geographic coordinate points, but also the average duration of time between those two points.
 

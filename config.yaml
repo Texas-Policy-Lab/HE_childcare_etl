@@ -1,3 +1,23 @@
 data_pth: "M:/26_HE/01_Childcare/Data"
 
 port: "http://127.0.0.1:5000/"
+
+data_pths:
+  in_pth: "M:/26_HE/01_Childcare/Data_Curated"
+  out_pth: "M:/26_HE/01_Childcare/Data_Current"
+
+data_in_names:
+  nber: "sf12010tractdistance25miles.csv"
+  acf: "acf-801-q{qtr}-2018-twc.xlsx"
+  ccl: "hhsc_ccl.csv"
+  kinder_neighborhoods: "tract_neighborhood_xwalk.csv"
+  tract_shape: "tract_shape.csv"
+  zip_shape: "zip_shape.csv"
+  state_fips_state_name_xwalk: "state_fips_state_name_xwalk.csv"
+  
+data_out_names:
+  acf_all: "acf_2018.csv"
+  tracts_xwalk: "tracts_xwalk.csv"
+  ccl: "hhsc_ccl.csv"
+  family_prvdr_zip: "family_prvdr_zip.csv"
+  osrm: "prvdr_family_commute_duration.csv"
