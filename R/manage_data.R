@@ -115,12 +115,14 @@ dm.family_prvdr_zip <- function(acf_data_in_pth,
 #' @param ccl_data_out_pth string. The path to write the cleaned ccl data to.
 #' @param ccl_data_out_name string. The name of the data to write out. 
 #' @param geocode logical. Default value is FALSE. Indicates whether geocoding off addresses should be applied.
+#' @param write logical. If the dataset should be written out
 dm.ccl <- function(ccl_data_in_pth,
                    ccl_data_in_name,
                    ccl_data_out_pth,
                    ccl_data_out_name,
                    geocode = FALSE,
-                   key = key) {
+                   key = key,
+                   write = FALSE) {
 
   df <- readr::read_csv(file.path(ccl_data_in_pth, ccl_data_in_name)) %>% 
     dplyr::mutate(operation_number = gsub("-.*", "", operation_number))
@@ -140,7 +142,9 @@ dm.ccl <- function(ccl_data_in_pth,
 
   }
 
-  write.csv(df, file.path(ccl_data_out_pth, ccl_data_out_name), row.names = FALSE)
+  if(write) {
+    write.csv(df, file.path(ccl_data_out_pth, ccl_data_out_name), row.names = FALSE)
+  }
 
   return(df)
 }

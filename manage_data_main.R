@@ -22,8 +22,9 @@ ccl <- dm.ccl(ccl_data_in_pth = data_in_pth,
               ccl_data_in_name = config$data_in_names$ccl,
               ccl_data_out_pth = data_out_pth,
               ccl_data_out_name = config$data_out_names$ccl,
-              geocode = TRUE,
-              key = api_key$mapquest$key)
+              geocode = FALSE,
+              key = api_key$mapquest$key,
+              write = FALSE)
 
 family_prvdr_zip <- dm.family_prvdr_zip(acf_data_in_pth = data_out_pth,
                                         acf_data_in_name = config$data_out_names$acf_all,
