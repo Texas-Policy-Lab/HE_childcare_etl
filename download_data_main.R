@@ -1,3 +1,5 @@
+library(plyr)
+
 config <- yaml::read_yaml("config.yaml")
 api_key <- yaml::read_yaml("api_key.yaml")
 
