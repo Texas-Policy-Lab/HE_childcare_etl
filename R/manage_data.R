@@ -127,49 +127,135 @@ dm.ccl <- function(ccl_data_in_pth,
   return(df)
 }
 
-#' @title Geocode addresses
-#' @descrption Geocodes addresses using the Geocodio API
-#' @param key string. The api key registered with your personal Geocodio account.
-#' @param addresses vector. The list of addresses to geocode.
+#' @title Pulls down bounding box parameters for Texas
 #' @export
-dm.geocode_address <- function(key,
-                               addresses,
-                               version = "v1.6",
-                               url = "https://api.geocod.io/{version}/geocode",
-                               limit = 10000) {
-  
-  if (length(addresses) > limit) {
-    calls <- split(addresses, ceiling(seq_along(addresses)/limit))
+dm.tx_bounding_box <- function(url = "https://gist.githubusercontent.com/a8dx/2340f9527af64f8ef8439366de981168/raw/81d876daea10eab5c2675811c39bcd18a79a9212/US_State_Bounding_Boxes.csv",
+                               texas_fips = "48") {
+
+  df <- readr::read_csv(url)
+
+  assertthat::assert_that(all(c("STATEFP", "xmin", "ymin", "xmax", "ymax") %in% names(df)))
+  assertthat::assert_that(typeof(df$STATEFP) == "character")
+    
+  df <- df %>% 
+    dplyr::filter(STATEFP == texas_fips)
+
+  return(list(ul = list(lng = df$xmin, lat = df$ymax),
+       lr = list(lng = df$xmax, lat = df$ymin)
+       )
+  )
+}
+
+#' @title Split calls
+#' @description Splits list into multiple groups for batch calls with limits per call
+#' @param v vector. Vector to split into multiple groups
+#' @param limit integer. The max size of each group.
+#' @export
+split_calls <- function(v, limit) {
+
+  if (length(v) > limit) {
+    calls <- split(v, ceiling(seq_along(v)/limit))
   } else {
-    calls <- list(addresses)
+    calls <- list(v)
   }
 
-  l <- lapply(calls, function(call, url, version) {
-    r <- httr::POST(url = glue::glue(url, version = version),
-                    query = list(api_key = key),
-                    body = list(call),
+  return(calls)
+}
+
+#' @title Geocode addresses
+#' @descrption Geocodes addresses using the Mapquest API
+#' @param addresses vector. The list of addresses to geocode.
+#' @param key string. The api key registered with your personal Mapquest account.
+#' @export
+dm.geocode_address <- function(addresses,
+                               key,
+                               version = "v1",
+                               url = "http://www.mapquestapi.com/geocoding/{version}/batch?key={key}",
+                               limit = 100) {
+
+  bb <- dm.tx_bounding_box()
+
+  calls <- split_calls(v = addresses,
+                       limit = limit)
+browser()
+  l <- lapply(calls, function(call, url, version, key) {
+    r <- httr::POST(url = glue::glue(url, version = version, key = key),
+                    query = list(key = key),
+                    body = list(locations = call,
+                                boundingBox = bb,
+                                maxResults = 1),
                     encode = "json")
 
     if(r$status_code == 200) {
 
-      r <- jsonlite::fromJSON(httr::content(r,
-                                            as = "text",
-                                            encoding = "UTF-8"),
-                              flatten = TRUE)
-      r <- r$results
-      browser()
-      new_names <- gsub("\\.", "_", colnames(r))
-      new_names <- gsub("response_input|address_components|fields", "", new_names)
-      new_names <- gsub("[_]+", "_", new_names)
-      new_names <- sub("^_", "", new_names)
+      c <- httr::content(r)
 
-      r <- set_names(r, new_names)
+      l <- lapply(1:length(c$results), function(x) {
 
-      as.data.frame(r)
+        row <- c$results[[x]]$locations[[1]]
+
+        df <- data.frame(street = row$street,
+                         city  = row$adminArea5,
+                         county = row$adminArea4,
+                         state = row$adminArea3,
+                         zip = row$postalCode,
+                         lat = row$latLng$lat,
+                         long = row$latLng$lng,
+                         mapURl= row$mapUrl,
+                         stringsAsFactors = FALSE
+        )
+      })
+
+      df <- do.call(rbind, l)
+
+      return(df)
+
     } else {
       warning("status not 200") 
     }
 
-  }, url = url, version = version)
+  }, url = url, version = version, key = key)
+
+  df <- do.call(rbind, l)
+
+  return(df)
+}
+#' @title Geocode addresses
+#' @descrption Geocodes addresses using the Mapquest API
+#' @param latLng list. The list of addresses to geocode.
+#' @param key string. The api key registered with your personal Mapquest account.
+#' @examples 
+#'  latLng <- list(lat = 30.333472, lng = -81.470448)
+#'  key <- "XXXXX"
+#'  address <- dm.reverse_geocode(latLng = latLng, key = key)
+#' @export
+dm.reverse_geocode <- function(latLng,
+                               key,
+                               version = "v1",
+                               url = "http://www.mapquestapi.com/geocoding/{version}/reverse?key={key}") {
+  browser()
+
+  l <- lapply(latLng, function(x, url, version, key) {
+    r <- httr::POST(url = glue::glue(url, version = version, key = key),
+                    query = list(key = key),
+                    body = list(location = list(latLng = x)),
+                    encode = "json")
+    
+    
+    
+    # "location": { "latLng": { "lat": 30.333472, "lng": -81.470448}}
+
+    if(r$status_code == 200) {
+
+      c <- httr::content(r)
+
+    } else {
+      warning("status not 200")
+    }
   
+  }, url = url, version = version, key = key)
+
+  df <- do.call(rbind, l)
+
+  return(df)
 }
