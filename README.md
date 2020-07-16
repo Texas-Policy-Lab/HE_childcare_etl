@@ -10,6 +10,55 @@ Information about the data is recorded in Confluence [here](https://tpldocs.rice
 
 Run the `manage_data_main.R` script. Before you will be able to run it follow the steps listed below:
 
+### Geocoding
+
+#### Mapquest API
+
+To do the geocoding part of this ETL you will need to make an account from (mapquest)[https://developer.mapquest.com/plan_purchase/steps/business_edition/business_edition_free/register]. Then create an file called api_key.yaml. When you sign up for the Mapquest API you will start with the free version of the API, this means that you get 15000 free requests per month. Reverse geocoding or geocoding the CCL which is approximately 14,850 rows pretty much uses this threshold up. You can use multiple emails to sign up for different keys however.
+
+The yaml file should have this structure.
+
+```
+mapquest:
+  key: 	XXXXXXXXXXXXXXXXX  
+
+```
+
+#### Geocoding the data
+
+The geocoding happens in this step which is in the `manage_data_main.R` script. To start the geocoding, change the geocoding parameter to `TRUE`.
+
+```{r}
+ccl <- dm.ccl(ccl_data_in_pth = data_in_pth,
+              ccl_data_in_name = config$data_in_names$ccl,
+              ccl_data_out_pth = data_out_pth,
+              ccl_data_out_name = config$data_out_names$ccl,
+              geocode = FALSE,
+              key = api_key$mapquest$key)
+```
+
+The ccl file then gets used in the dm.family_prvdr_zip() function to create the family_prvdr_zip dataframe.
+
+#### Testing HHSC CCL geocode quality
+
+To test the quality of the latitudes and longitudes from the HHSC CCL raw data run the following code. When this code was run in July, the results showed 10% of the lat/long combos from the raw data were not even in Texas. Another 5% of the lat/long combos had counties which did not match the county from the HHSC CCL raw data.
+
+```
+ccl_address <- ccl %>%
+  dplyr::filter(!is.na(latitude) & !is.na(longitude)) %>%
+  dplyr::select(operation_number, latitude, longitude, county)
+
+latLng <- lapply(1:nrow(ccl_address), function(add, df) {
+  
+  list(lat = df$latitude[add],
+       lng = df$longitude[add])
+
+}, df = ccl_address)
+
+df <- dm.reverse_geocode(latLng = latLng,
+                         key = api_key$mapquest$key)
+```
+
 ### OSRM
 
 Now run the `osrm_main.R` script. Before you will be able to run it follow the steps listed below.
