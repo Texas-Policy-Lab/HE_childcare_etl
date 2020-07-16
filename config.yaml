@@ -21,3 +21,4 @@ data_out_names:
   ccl: "hhsc_ccl.csv"
   family_prvdr_zip: "family_prvdr_zip.csv"
   osrm: "prvdr_family_commute_duration.csv"
+  geocode: "mapquest_geocode.csv"
