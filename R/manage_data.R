@@ -114,13 +114,31 @@ dm.family_prvdr_zip <- function(acf_data_in_pth,
 #' @param ccl_data_in_name string. The name of the raw data to read in.
 #' @param ccl_data_out_pth string. The path to write the cleaned ccl data to.
 #' @param ccl_data_out_name string. The name of the data to write out. 
+#' @param geocode logical. Default value is FALSE. Indicates whether geocoding off addresses should be applied.
 dm.ccl <- function(ccl_data_in_pth,
                    ccl_data_in_name,
                    ccl_data_out_pth,
-                   ccl_data_out_name) {
+                   ccl_data_out_name,
+                   geocode = FALSE,
+                   key = key) {
 
   df <- readr::read_csv(file.path(ccl_data_in_pth, ccl_data_in_name)) %>% 
     dplyr::mutate(operation_number = gsub("-.*", "", operation_number))
+
+  if(geocode) {
+
+    geocode <- dm.geocode_address(addresses = ccl,
+                                  key = key)
+
+    assertthat::assert_that(all(c("lat", "long") %in% names(geocode)))
+
+    df <- df %>% 
+      dplyr::select(-c(county, latitude, longitude)) %>%
+      dplyr::left_join(geocode %>% 
+                         dplyr::rename(latitude = lat,
+                                       longitude = long))
+
+  }
 
   write.csv(df, file.path(ccl_data_out_pth, ccl_data_out_name), row.names = FALSE)
 
@@ -162,6 +180,50 @@ split_calls <- function(v, limit) {
   return(calls)
 }
 
+#' @title Response -> Dataframe
+#' @description Turns the response from mapquest into a dataframe
+#' @export
+dm.geocode_request <- function(c) {
+
+  l <- lapply(1:length(c$results), function(x) {
+    
+    row <- c$results[[x]]$locations[[1]]
+    
+    df <- data.frame(street = row$street,
+                     neighborhood = row$adminArea6,
+                     city  = row$adminArea5,
+                     county = row$adminArea4,
+                     state = row$adminArea3,
+                     zip = row$postalCode,
+                     lat = row$latLng$lat,
+                     long = row$latLng$lng,
+                     geocodeQualityCode = row$geocodeQualityCode,
+                     mapURl= row$mapUrl,
+                     stringsAsFactors = FALSE
+    )
+  })
+  
+  df <- do.call(rbind, l)
+  
+  return(df)
+}
+
+#' @title Drops poor quality geocodes
+#' @description Use the geocodeQualityCode value returned to determine the quality of the geocode. https://developer.mapquest.com/documentation/geocoding-api/quality-codes/.
+#' @export
+dm.drop_poor_quality <- function(df,
+                                 qualityCode = "A1|A3|A4") {
+  
+  poorQuality <- stringr::str_starts(string = df$geocodeQualityCode, pattern = qualityCode)
+  
+  df <- df %>% 
+    dplyr::mutate(lat = ifelse(poorQuality, NA, lat),
+                  long = ifelse(poorQuality, NA, long)
+    )
+
+  return(df)
+}
+
 #' @title Geocode addresses
 #' @descrption Geocodes addresses using the Mapquest API
 #' @param addresses vector. The list of addresses to geocode.
@@ -175,9 +237,11 @@ dm.geocode_address <- function(addresses,
 
   bb <- dm.tx_bounding_box()
 
-  calls <- split_calls(v = addresses,
+  assertthat::assert_that("location_address" %in% names(addresses))
+  
+  calls <- split_calls(v = addresses$location_address,
                        limit = limit)
-browser()
+
   l <- lapply(calls, function(call, url, version, key) {
     r <- httr::POST(url = glue::glue(url, version = version, key = key),
                     query = list(key = key),
@@ -190,23 +254,7 @@ browser()
 
       c <- httr::content(r)
 
-      l <- lapply(1:length(c$results), function(x) {
-
-        row <- c$results[[x]]$locations[[1]]
-
-        df <- data.frame(street = row$street,
-                         city  = row$adminArea5,
-                         county = row$adminArea4,
-                         state = row$adminArea3,
-                         zip = row$postalCode,
-                         lat = row$latLng$lat,
-                         long = row$latLng$lng,
-                         mapURl= row$mapUrl,
-                         stringsAsFactors = FALSE
-        )
-      })
-
-      df <- do.call(rbind, l)
+      df <- dm.geocode_request(c)
 
       return(df)
 
@@ -217,9 +265,16 @@ browser()
   }, url = url, version = version, key = key)
 
   df <- do.call(rbind, l)
+  
+  df <- df %>% 
+    dplyr::bind_cols(addresses %>% 
+                       dplyr::select(operation_number))
+  
+  df <- dm.drop_poor_quality(df)
 
   return(df)
 }
+
 #' @title Geocode addresses
 #' @descrption Geocodes addresses using the Mapquest API
 #' @param latLng list. The list of addresses to geocode.
@@ -233,29 +288,27 @@ dm.reverse_geocode <- function(latLng,
                                key,
                                version = "v1",
                                url = "http://www.mapquestapi.com/geocoding/{version}/reverse?key={key}") {
-  browser()
 
   l <- lapply(latLng, function(x, url, version, key) {
     r <- httr::POST(url = glue::glue(url, version = version, key = key),
                     query = list(key = key),
                     body = list(location = list(latLng = x)),
                     encode = "json")
-    
-    
-    
-    # "location": { "latLng": { "lat": 30.333472, "lng": -81.470448}}
 
     if(r$status_code == 200) {
 
       c <- httr::content(r)
 
+      df <- dm.geocode_request(c)
+
     } else {
       warning("status not 200")
     }
-  
+
   }, url = url, version = version, key = key)
 
   df <- do.call(rbind, l)
 
   return(df)
 }
+
