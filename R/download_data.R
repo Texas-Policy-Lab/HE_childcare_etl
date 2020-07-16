@@ -42,11 +42,11 @@ get.hhsc_ccl_data <-  function(data_in_name,
                                data_in_pth,
                                url = "https://data.texas.gov/api/odata/v4/bc5r-88dy",
                                df_all = data.frame()) {
-  
+
   api_call <- function(url, df_all) {
-    
+ 
     r <- httr::GET(url)
-    
+
     if (r$status_code == 200) {
       
       c <- httr::content(r)
@@ -62,20 +62,19 @@ get.hhsc_ccl_data <-  function(data_in_name,
       warning("status not 200")
     }
   }
-  
+
   result <- api_call(url, df_all)
-  
+
   while(!is.null(result$url)) {
     print(result$url)
     result <- api_call(url = result$url,
                        df_all = result$df_all) 
   }
-  
+
   df_all <- sapply(result$df_all, as.character) %>% 
     as.data.frame(stringsAsFactors = FALSE)
-  
-  write.csv(df_all, file.path(data_in_pth, data_in_name), row.names = FALSE)
 
+  write.csv(df_all, file.path(data_in_pth, data_in_name), row.names = FALSE)
 }
 
 #' @title Get NBER Tract data

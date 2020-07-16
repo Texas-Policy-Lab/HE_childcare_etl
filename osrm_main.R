@@ -86,4 +86,4 @@ commute <- readr::read_csv(file.path(config$data_pths$out_pth, config$data_out_n
                    FIPS = mode(Parents.FIPS)) %>%
   tidyr::drop_na(Parents.FamilyZip)
 
-write.csv(df, "./data/commuting_times_zipcode.csv", row.names = FALSE)
+write.csv(commute, "./data/commuting_times_zipcode.csv", row.names = FALSE)
