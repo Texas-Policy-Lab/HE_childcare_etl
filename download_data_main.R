@@ -24,3 +24,9 @@ get.tract_shape(data_in_name = config$data_in_names$tract_shape,
 
 get.state_fips_state_name_xwalk(data_in_name = config$data_in_names$state_fips_state_name_xwalk,
                                 data_in_pth)
+
+t <- data_dictionary.acs5.subject("S1901")
+
+df <- get.acs5.subject(id_vars = c("TRACT", "COUNTY"),
+                       value_vars = t$Name,
+                       key = api_key$census$key)
