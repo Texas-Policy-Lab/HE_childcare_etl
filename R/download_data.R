@@ -212,5 +212,4 @@ get.pulse_puf <- function(data_in_name,
 
   })
   
-  
 }
