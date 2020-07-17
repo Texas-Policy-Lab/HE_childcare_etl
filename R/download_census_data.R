@@ -1,31 +1,47 @@
 #' @title Scrape census variables from the api website to avoid typos
+#' @param keep_est logical. Keep all variables that are estimates. Default is TRUE
+#' @param keep_annote_est logical.Keep all variables taht are annotations of estimates. Default is FALSE.
+#' @param keep_moe logical. Keep all variables that margin of errors. Default is FALSE.
+#' @param keep_annote_moe logical. Keep all variables that are annotations of margin of errors. Default is FALSE.
 #' @export
-data_dictionary.census <- function(table, url) {
+data_dictionary.census <- function(table,
+                                   url,
+                                   keep_est = TRUE,
+                                   keep_annote_est = FALSE,
+                                   keep_moe = FALSE,
+                                   keep_annote_moe = FALSE) {
+
+  dct <- data.frame(est = keep_est,
+                    annote_est = keep_annote_est,
+                    moe = keep_moe,
+                    annote_moe = keep_annote_moe) %>% 
+    tidyr::gather(variable, keep)
   
   url <- glue::glue(url, table = table)
-  
-  html <- xml2::read_html(url) %>% 
+
+  df <- xml2::read_html(url) %>% 
     rvest::html_table(fill = TRUE) %>% 
-    .[[1]] 
-  
-  html <- html[!is.na(names(html))]
-  
-  html <- html %>% 
-    dplyr::filter(Group == table) %>%
-    dplyr::select(Name, Label) %>% 
-    dplyr::mutate(est = ifelse(grepl("Estimate", Label), TRUE, FALSE),
-                  est_anttn = ifelse(grepl("Annotation of Estimate", Label), TRUE, FALSE),
-                  moe = ifelse(grepl("Margin of Error", Label), TRUE, FALSE),
-                  moe_anttn = ifelse(grepl("Annotation of Margin of Error", Label), TRUE, FALSE),
-                  est = ifelse(est & !est_anttn, TRUE, FALSE),
-                  moe = ifelse(moe & !moe_anttn, TRUE, FALSE)
-    ) %>% 
-    dplyr::filter(est) %>% 
-    dplyr::filter(!grepl("Total!!PERCENT ALLOCATED!!Industry", Label)) %>% 
-    dplyr::mutate(Label = gsub("Estimate!!", "", Label))
-  
-  return(html)
-  
+    .[[1]]
+
+  df <- df[!is.na(names(df))]
+
+  assertthat::assert_that(all(c("Name", "Label") %in% names(df)))
+
+  df <- df %>%
+    dplyr::mutate(est = stringr::str_ends(Name, "E"),
+                  annote_est = stringr::str_ends(Name, "EA"),
+                  moe = stringr::str_ends(Name, "M"),
+                  annote_moe = stringr::str_ends(Name, "MA")) %>% 
+    dplyr::filter(est | annote_est | moe | annote_moe) %>% 
+    dplyr::select(Name, Label, est, annote_est, moe, annote_moe) %>% 
+    tidyr::gather(variable, value, -c(Name, Label)) %>% 
+    dplyr::left_join(dct) %>% 
+    dplyr::filter(value & keep) %>% 
+    dplyr::select(-c(value, variable, keep)) %>% 
+    dplyr::rename(variable = Name,
+                  label = Label)
+
+  return(df)
 }
 
 data_dictionary.acs5.subject <- function(table,
