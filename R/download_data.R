@@ -153,7 +153,7 @@ get.tract_shape <- function(data_in_name,
 }
 
 #' @title Get State FIPS and State Name Crosswalk
-#' @description Downloads the crosswalk between county fips codes and county names for Texas
+#' @description Downloads the crosswalk between county fips codes and county names for Texas from TIGRIS package
 #' @param data_in_name string. The name to of the data to read in.
 #' @param data_in_pth string. The path to read the data in from.
 #' @export
@@ -184,5 +184,33 @@ get.zip_shape <- function(data_in_name,
                           state = 48) {
 
   geo <- tigris::zctas(state = state, cb = TRUE)
+  
+}
+
+#' @title Get PULSE Public Use Files
+#' @description Download data from: https://www.census.gov/programs-surveys/household-pulse-survey/datasets.html
+#' @param data_in_name string. The name to of the data to read in.
+#' @param data_in_pth string. The path to read the data in from.
+#' @export
+get.pulse_puf <- function(data_in_name,
+                          data_in_pth,
+                          url = "https://www.census.gov/programs-surveys/household-pulse-survey/datasets.html") {
+
+  urls <- xml2::read_html(url) %>%
+    rvest::html_nodes(".uscb-text-link") %>%
+    rvest::html_attr("href")
+
+  urls <- urls[grepl(pattern = 'CSV', urls)]
+
+  lapply(urls, function(url) {
+
+    fl_name <- glue::glue(data_in_name, wk = wk)
+
+    dwnld_pth <- file.path(data_in_pth, fl_name)
+
+    download.files(url, file.path(destfile = dwnld_pth, mode = "wb"))
+
+  })
+  
   
 }
