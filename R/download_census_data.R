@@ -158,7 +158,7 @@ get.acs5 <- function(data_in_name,
                              ...) {
 
   assertthat::assert_that(table_type %in% c("detail", "subject", "profile", "cprofile"))
-  
+
   if(table_type == "detail") {
     table_type <- NULL
   }
@@ -182,10 +182,17 @@ get.acs5 <- function(data_in_name,
   ), class = table_type)
 
   if(is.null(cls$value_vars)) {
-    cls$value_vars <- do.call("get.census_data_dict", cls)$variable
+
+    labs <- do.call("get.census_data_dict", cls)
+
+    cls$value_vars <- labs$variable
   }
 
   df <- do.call("get.census_api", cls)
 
+  Hmisc::label(df) <- as.list(labs$label[match(names(df), labs$variable)])
+
   write.csv(df, file.path(data_in_pth, data_in_name), row.names = FALSE)
+  
+  return(df)
 }
