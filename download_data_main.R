@@ -4,20 +4,24 @@ library(magrittr)
 config <- yaml::read_yaml("config.yaml")
 api_key <- yaml::read_yaml("api_key.yaml")
 
-lapply(config$pkg, dwnld_pkg)
-
 sapply(list.files("R", full.names = TRUE, recursive = TRUE), source, .GlobalEnv)
+
+lapply(config$pkg, dwnld_pkg)
 
 data_in_pth <- config$data_pths$in_pth
 
-get.nber_tract_data(data_in_name = config$data_in_names$nber,
-                    data_in_pth = data_in_pth)
+## Child care data
 
 get.hhsc_ccl_data(data_in_name = config$data_in_names$ccl,
                   data_in_pth = data_in_pth)
 
 get.acf_data(data_in_name = config$data_in_names$acf,
              data_in_pth = data_in_pth)
+
+## Geographic data
+
+get.nber_tract_data(data_in_name = config$data_in_names$nber,
+                    data_in_pth = data_in_pth)
 
 get.kinder_neighborhood_tract_xwalk(data_in_name = config$data_in_names$kinder_neighborhoods,
                                     data_in_pth = data_in_pth)
