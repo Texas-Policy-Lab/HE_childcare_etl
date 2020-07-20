@@ -2,7 +2,7 @@
 #' @inheritParams get.acs5
 #' @param url string. The url to join with the endpoint.
 #' @export
-census_data_dict <- function(data_in_name,
+get.census_data_dict <- function(data_in_name,
                              data_pth_name, 
                              endpoint,
                              path,
@@ -86,7 +86,7 @@ get.census_response <- function(r,
 #' @title Makes the call the the census api
 #' @inheritParams get.acs5
 #' @export
-census_api <- function(id_vars,
+get.census_api <- function(id_vars,
                        value_vars,
                        key,
                        year,
@@ -118,7 +118,8 @@ census_api <- function(id_vars,
   tract = tract, state = state, key = key)
 
   df <- l %>%
-    purrr::reduce(dplyr::left_join)
+    purrr::reduce(dplyr::left_join) %>%
+    dplyr::select(-c(TRACT, COUNTY))
 
   df[value_vars] <- apply(df[value_vars], 2, function(x) {ifelse(x %in% c(-666666666.0, -888888888), NA, x)})
 
@@ -181,10 +182,10 @@ get.acs5 <- function(data_in_name,
   ), class = table_type)
 
   if(is.null(cls$value_vars)) {
-    cls$value_vars <- do.call("census_data_dict", cls)$variable
+    cls$value_vars <- do.call("get.census_data_dict", cls)$variable
   }
 
-  df <- do.call("census_api", cls)
+  df <- do.call("get.census_api", cls)
 
   write.csv(df, file.path(data_in_pth, data_in_name), row.names = FALSE)
 }
