@@ -196,16 +196,22 @@ get.pulse_puf <- function(data_in_name,
     rvest::html_nodes(".uscb-text-link") %>%
     rvest::html_attr("href")
 
-  urls <- urls[grepl(pattern = 'CSV', urls)]
+  urls <- paste0("https:",urls[grepl(pattern = 'CSV', urls)])
 
   lapply(urls, function(url) {
 
-    fl_name <- glue::glue(data_in_name, wk = wk)
-
+    fl_name <- sub(".*/", "", url)
+    
     dwnld_pth <- file.path(data_in_pth, fl_name)
 
-    download.files(url, file.path(destfile = dwnld_pth, mode = "wb"))
+    download.file(url, destfile = dwnld_pth, mode = "wb")
 
+    l <- unlist(unzip(dwnld_pth))
+
+    lapply(l, function(x) {
+      file.rename(from = x,
+                  to = file.path(data_in_pth, x))
+    })
   })
-  
+
 }
