@@ -6,6 +6,19 @@ Run the `download_data_main.R` script. It will take awhile to download all the d
 
 Information about the data is recorded in Confluence [here](https://tpldocs.rice.edu/display/HEC/Data+v2.0).
 
+### Census Data
+
+The census data is pulled down using the census API. Get your own census api key [here](https://api.census.gov/data/key_signup.html).
+
+Then create a file called `api_key.yaml`.
+
+The yaml file should have this structure.
+```
+census:
+  key: XXXXXXXXXXXXXXXX
+
+```
+
 ## Data Management
 
 Run the `manage_data_main.R` script. Before you will be able to run it follow the steps listed below:
@@ -14,7 +27,9 @@ Run the `manage_data_main.R` script. Before you will be able to run it follow th
 
 #### Mapquest API
 
-To do the geocoding part of this ETL you will need to make an account from (mapquest)[https://developer.mapquest.com/plan_purchase/steps/business_edition/business_edition_free/register]. Then create an file called api_key.yaml. When you sign up for the Mapquest API you will start with the free version of the API, this means that you get 15000 free requests per month. Reverse geocoding or geocoding the CCL which is approximately 14,850 rows pretty much uses this threshold up. You can use multiple emails to sign up for different keys however.
+To do the geocoding part of this ETL you will need to make an account from (mapquest)[https://developer.mapquest.com/plan_purchase/steps/business_edition/business_edition_free/register]. When you sign up for the Mapquest API you will start with the free version of the API, this means that you get 15000 free requests per month. Reverse geocoding or geocoding the CCL which is approximately 14,850 rows pretty much uses this threshold up. You can use multiple emails to sign up for different keys however.
+
+Then create (or add to) an file called `api_key.yaml`.
 
 The yaml file should have this structure.
 

@@ -141,8 +141,6 @@ get.tract_shape <- function(data_in_name,
                             state_fips = 48,
                             county_fips = 201) {
 
-  dwnld_pkg(pkg_name = "tigris")
-
   geo <- tigris::tracts(state = state_fips, county = county_fips, cb = TRUE)
 
   geo <- geo %>% 
@@ -160,8 +158,6 @@ get.tract_shape <- function(data_in_name,
 get.state_fips_state_name_xwalk <- function(data_in_name,
                                             data_in_pth,
                                             state_fips = 48) {
-
-  dwnld_pkg(pkg_name = "tigris")
 
   cnty <- tigris::counties(state = state_fips) %>% 
     dplyr::select(NAME, NAMELSAD, COUNTYFP) %>% 

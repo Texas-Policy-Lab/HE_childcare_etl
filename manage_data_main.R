@@ -5,8 +5,12 @@ config <- yaml::read_yaml("config.yaml")
 
 sapply(list.files("R", full.names = TRUE, recursive = TRUE), source, .GlobalEnv)
 
+lapply(config$pkg, dwnld_pkg)
+
 data_in_pth <- config$data_pths$in_pth
 data_out_pth <- config$data_pths$out_pth
+
+load(".RData")
 
 tracts_xwalk <- dm.tracts_xwalk(data_in_name = config$data_in_names$nber,
                                 data_in_pth = data_in_pth,
@@ -32,3 +36,5 @@ family_prvdr_zip <- dm.family_prvdr_zip(acf_data_in_pth = data_out_pth,
                                         ccl_data_in_name = config$data_out_names$ccl,
                                         data_out_pth = data_out_pth,
                                         data_out_name = config$data_out_names$family_prvdr_zip)
+
+save.image()

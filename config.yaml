@@ -14,7 +14,13 @@ data_in_names:
   tract_shape: "tract_shape.csv"
   zip_shape: "zip_shape.csv"
   state_fips_state_name_xwalk: "state_fips_state_name_xwalk.csv"
-  
+  census:
+    S0601_2018: "S0601_2018.csv"
+    S1201_2018: "S1201_2018.csv"
+    S1501_2018: "S1501_2018.csv"
+    S1901_2018: "S1901_2018.csv"
+    S1902_2018: "S1902_2018.csv"
+
 data_out_names:
   acf_all: "acf_2018.csv"
   tracts_xwalk: "tracts_xwalk.csv"
@@ -22,3 +28,5 @@ data_out_names:
   family_prvdr_zip: "family_prvdr_zip.csv"
   osrm: "prvdr_family_commute_duration.csv"
   geocode: "mapquest_geocode.csv"
+  
+pkg: ["dplyr", "tidyr", "httr", "plyr", "magrittr", "Hmisc", "osrm", "rvest", "xml2", "assertthat", "readr", "readxl", "stringr", "tigris", "future.apply", "future", "parallel"]
