@@ -69,4 +69,7 @@ s1902 <- get.acs5(data_in_name = config$data_in_names$census$S1902_2018,
                   table_type = "subject",
                   key = api_key$census$key)
 
+get.pulse_puf(data_in_name = config$data_in_names$pulse,
+              data_in_pth = data_in_pth)
+
 save.image()
