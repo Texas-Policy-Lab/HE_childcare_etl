@@ -12,6 +12,8 @@ data_out_pth <- config$data_pths$out_pth
 
 load(".RData")
 
+sapply(list.files("R", full.names = TRUE, recursive = TRUE), source, .GlobalEnv)
+
 tracts_xwalk <- dm.tracts_xwalk(data_in_name = config$data_in_names$nber,
                                 data_in_pth = data_in_pth,
                                 data_out_name = config$data_out_names$tracts_xwalk,
@@ -26,6 +28,8 @@ ccl <- dm.ccl(ccl_data_in_pth = data_in_pth,
               ccl_data_in_name = config$data_in_names$ccl,
               ccl_data_out_pth = data_out_pth,
               ccl_data_out_name = config$data_out_names$ccl,
+              dfps_home_type_pth = data_in_pth,
+              dfps_home_type_name = config$data_in_names$dfps_prvdr_type,
               geocode = FALSE,
               key = api_key$mapquest$key,
               write = FALSE)
