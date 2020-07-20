@@ -50,8 +50,6 @@ dm.merge_acf <- function(data_in_name,
                          qtr = 1:4,
                          sheet = "ChildrenParentsSettings") {
 
-  lapply(c("future.apply", "future", "readxl"), dwnld_pkg)
-
   future::plan(multiprocess)
 
   fls <- glue::glue(data_in_name, qtr = qtr)

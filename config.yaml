@@ -28,3 +28,5 @@ data_out_names:
   family_prvdr_zip: "family_prvdr_zip.csv"
   osrm: "prvdr_family_commute_duration.csv"
   geocode: "mapquest_geocode.csv"
+  
+pkg: ["dplyr", "tidyr", "httr", "plyr", "magrittr", "Hmisc", "osrm", "rvest", "xml2", "assertthat", "readr", "readxl", "stringr", "tigris", "future.apply", "future", "parallel"]

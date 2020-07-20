@@ -1,7 +1,10 @@
 library(plyr)
+library(magrittr)
 
 config <- yaml::read_yaml("config.yaml")
 api_key <- yaml::read_yaml("api_key.yaml")
+
+lapply(config$pkg, dwnld_pkg)
 
 sapply(list.files("R", full.names = TRUE, recursive = TRUE), source, .GlobalEnv)
 
@@ -25,8 +28,41 @@ get.tract_shape(data_in_name = config$data_in_names$tract_shape,
 get.state_fips_state_name_xwalk(data_in_name = config$data_in_names$state_fips_state_name_xwalk,
                                 data_in_pth)
 
-t <- data_dictionary.acs5.subject("S1901")
+## Download census tables
 
-df <- get.acs5.subject(id_vars = c("TRACT", "COUNTY"),
-                       value_vars = t$Name,
-                       key = api_key$census$key)
+s0601 <- get.acs5(data_in_name = config$data_in_names$census$S0601_2018,
+                  data_in_pth = data_in_pth,
+                  id_vars = c("TRACT", "COUNTY"),
+                  value_vars = NULL,
+                  table_type = "subject",
+                  key = api_key$census$key)
+
+s1201 <- get.acs5(data_in_name = config$data_in_names$census$S1201_2018,
+                  data_in_pth = data_in_pth,
+                  id_vars = c("TRACT", "COUNTY"),
+                  value_vars = NULL,
+                  table_type = "subject",
+                  key = api_key$census$key)
+
+s1501 <- get.acs5(data_in_name = config$data_in_names$census$S1501_2018,
+                  data_in_pth = data_in_pth,
+                  id_vars = c("TRACT", "COUNTY"),
+                  value_vars = NULL,
+                  table_type = "subject",
+                  key = api_key$census$key)
+
+s1901 <- get.acs5(data_in_name = config$data_in_names$census$S1901_2018,
+                  data_in_pth = data_in_pth,
+                  id_vars = c("TRACT", "COUNTY"),
+                  value_vars = NULL,
+                  table_type = "subject",
+                  key = api_key$census$key)
+
+s1902 <- get.acs5(data_in_name = config$data_in_names$census$S1902_2018,
+                  data_in_pth = data_in_pth,
+                  id_vars = c("TRACT", "COUNTY"),
+                  value_vars = NULL,
+                  table_type = "subject",
+                  key = api_key$census$key)
+
+save.image()
