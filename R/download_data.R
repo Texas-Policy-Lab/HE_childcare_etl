@@ -185,11 +185,9 @@ get.zip_shape <- function(data_in_name,
 
 #' @title Get PULSE Public Use Files
 #' @description Download data from: https://www.census.gov/programs-surveys/household-pulse-survey/datasets.html
-#' @param data_in_name string. The name to of the data to read in.
 #' @param data_in_pth string. The path to read the data in from.
 #' @export
-get.pulse_puf <- function(data_in_name,
-                          data_in_pth,
+get.pulse_puf <- function(data_in_pth,
                           url = "https://www.census.gov/programs-surveys/household-pulse-survey/datasets.html") {
 
   urls <- xml2::read_html(url) %>%
