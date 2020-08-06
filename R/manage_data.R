@@ -107,22 +107,6 @@ dm.family_prvdr_zip <- function(acf_data_in_pth,
   return(df)
 }
 
-#' @title Data management steps for days of operation
-#' @param df dataframe.
-#' @export
-dm.ccl_days_of_operation <- function(df,
-                                     var = "days_of_operation") {
-
-  assertthat::assert_that(all(c("operation_number", var) %in% names(df)))
-  
-  df <- df %>% 
-    dplyr::select(dplyr::one_of("operation_number", var)) %>% 
-    dm.str_split_to_col(var = var) %>% 
-    dplyr::select(-var) 
-  
-  return(df)
-}
-
 #' @title CCL data management steps
 #' @param ccl_data_in_pth string. The path to read the ccl data in from.
 #' @param ccl_data_in_name string. The name of the raw data to read in.
@@ -134,23 +118,24 @@ dm.ccl <- function(ccl_data_in_pth,
                    ccl_data_in_name,
                    ccl_data_out_pth,
                    ccl_data_out_name,
-                   dfps_home_type_pth,
-                   dfps_home_type_name,
                    geocode = FALSE,
                    key = key,
                    write = FALSE) {
 
-  ccl <- readr::read_csv(file.path(ccl_data_in_pth, ccl_data_in_name)) %>% 
-    dplyr::mutate(operation_number = gsub("-.*", "", operation_number)) 
-  
-  dfps <- dm.dfps_prvdr_type(data_in_name = dfps_home_type_name,
-                             data_in_pth = dfps_home_type_pth)
-  
+  ccl <- readr::read_csv(file.path(ccl_data_in_pth, ccl_data_in_name))
+
+  assertthat::assert_that(all(c("operation_number", "operation_type",
+                                "days_of_operation", "accepts_child_care_subsidies") %in% names(ccl)))
+
   doo <- dm.ccl_days_of_operation(ccl)
 
+  pt <- dm.ccl_operation_type(ccl)
+
   ccl <- ccl %>% 
-    dplyr::left_join(dfps) %>% 
-    dplyr::left_join(doo)
+    dplyr::mutate(operation_number = gsub("-.*", "", operation_number)) %>% 
+    dplyr::left_join(doo) %>% 
+    dplyr::left_join(pt) %>% 
+    dplyr::mutate(ccl_accepts_subsidy = ifelse(accepts_child_care_subsidies == "Y", TRUE, FALSE))
 
   if(geocode) {
 
