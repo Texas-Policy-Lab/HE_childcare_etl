@@ -56,3 +56,36 @@ dm.str_split_to_col <- function(df, var, split = ",") {
   return(df)
 }
 
+#' @title Data management steps for days of operation
+#' @param df dataframe.
+#' @export
+dm.ccl_days_of_operation <- function(df,
+                                     var = "days_of_operation") {
+  
+  assertthat::assert_that(all(c("operation_number", var) %in% names(df)))
+  
+  df <- df %>% 
+    dplyr::select(dplyr::one_of("operation_number", var)) %>% 
+    dm.str_split_to_col(var = var) %>% 
+    dplyr::select(-var) 
+  
+  return(df)
+}
+
+dm.ccl_operation_type <- function(df,
+                                  var = "operation_type",
+                                  prvdr_types = c("Child Placing Agency", "Registered Child-Care Home",
+                                                  "Licensed Child-Care Home", "Licensed Center",
+                                                  "General Residential Operation")) {
+
+  assertthat::assert_that(all(c("operation_number", var) %in% names(df)))
+  assertthat::assert_that(all(unique(df$operation_type) %in% prvdr_types))
+
+  df <- df %>% 
+    dplyr::mutate(center_prvdr = ifelse(grepl("Licensed Center", operation_type), TRUE, FALSE),
+                  home_prvdr = ifelse(grepl("Home", operation_type), TRUE, FALSE)
+    )
+
+  return(df)
+}
+
