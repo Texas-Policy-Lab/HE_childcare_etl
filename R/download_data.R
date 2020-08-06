@@ -182,3 +182,12 @@ get.zip_shape <- function(data_in_name,
   geo <- tigris::zctas(state = state, cb = TRUE)
   
 }
+
+
+get.poverty_thresholds <- function(data_in_name,
+                                   data_in_pth,
+                                   url = "https://www2.census.gov/programs-surveys/cps/tables/time-series/historical-poverty-thresholds/thresh19.xls") {
+
+  dwnld_pth <- file.path(data_in_pth, data_in_name)
+  download.file(glue::glue(url, fl = data_in_name), dwnld_pth)
+}
