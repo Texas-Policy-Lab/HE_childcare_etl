@@ -12,7 +12,6 @@ get.census_data_dict <- function(data_in_name,
                              keep_moe,
                              keep_annote_moe,
                              url = "groups/{table}.html", ...) {
-
   url <- paste(endpoint, path, glue::glue(url, table = table), sep = "/")
 
   dct <- data.frame(est = keep_est,
@@ -126,6 +125,16 @@ get.census_api <- function(id_vars,
   return(df)
 }
 
+
+create_path <- function(...) UseMethod("create_path")
+create_path.default <- function(cls, ...) {
+  glue::glue("data/{year}/acs/acs5/{table_type}", year = cls$year, table_type = cls$table_type)
+}
+
+create_path.detail <- function(cls, ...) {
+  glue::glue("data/{year}/acs/acs5", year = cls$year)
+}
+
 #' @title Get Data for specified variables from American Community Survey 5 year estimates.
 #' @param id_vars vector. The ID variables to include in each table e.g. TRACT, COUNTY
 #' @param value_vars vector. The non ID variables to pull down such as B10001E
@@ -143,7 +152,7 @@ get.census_api <- function(id_vars,
 get.acs5 <- function(data_in_name,
                      data_in_pth,
                      id_vars,
-                     value_vars,
+                     value_vars = NULL,
                      table_type,
                      key,
                      keep_est = TRUE,
@@ -151,17 +160,12 @@ get.acs5 <- function(data_in_name,
                      keep_moe = FALSE,
                      keep_annote_moe = FALSE,
                      year = 2018,
-                     path = "data/{year}/acs/acs5/{table_type}",
                      tract = "*",
                      state = "48",
                      endpoint = "https://api.census.gov",
                              ...) {
 
   assertthat::assert_that(table_type %in% c("detail", "subject", "profile", "cprofile"))
-
-  if(table_type == "detail") {
-    table_type <- NULL
-  }
 
   cls <- structure(list(data_in_name = data_in_name,
                         data_in_pth = data_in_pth,
@@ -173,13 +177,12 @@ get.acs5 <- function(data_in_name,
                         keep_moe = keep_moe,
                         keep_annote_moe = keep_annote_moe,
                         year = year,
-                        path = glue::glue(path, year = year, table_type = table_type),
                         tract = tract,
                         state = state,
                         endpoint = endpoint,
-                        table = gsub("_.*","", data_in_name),
-                        ...
-  ), class = table_type)
+                        table = gsub("_.*","", data_in_name)),
+                   class = table_type)
+  cls$path <- create_path(cls)
 
   if(is.null(cls$value_vars)) {
 
