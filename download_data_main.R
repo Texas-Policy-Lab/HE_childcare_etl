@@ -34,117 +34,51 @@ get.state_fips_state_name_xwalk(data_in_name = config$data_in_names$state_fips_s
 
 ## Download census tables
 
-s0601 <- get.acs5(data_in_name = config$data_in_names$census$S0601_2018,
-                  data_in_pth = data_in_pth,
+subject <- sapply(config$data_in_names$census$subject, 
+                  function(table, pth, id_vars, value_vars, table_type, key, year, est_year) {
+
+  df <- get.acs(pth = pth,
+                table = table,
+                id_vars = id_vars,
+                value_vars = value_vars,
+                table_type = table_type,
+                year = year,
+                est_year = est_year,
+                key = key)
+
+}, 
+   pth = data_in_pth,
+   id_vars = c("TRACT", "COUNTY"),
+   value_vars = NULL,
+   table_type = "subject",
+   year = config$data_in_names$census$year,
+   est_year = config$data_in_names$census$est_year,
+   key = api_key$census$key,
+   USE.NAMES = TRUE,
+   simplify = FALSE)
+
+detail <- sapply(config$data_in_names$census$detail, 
+                  function(table, pth, id_vars, value_vars, table_type, key, year, est_year) {
+                    
+                    df <- get.acs(pth = pth,
+                                  table = table,
+                                  id_vars = id_vars,
+                                  value_vars = value_vars,
+                                  table_type = table_type,
+                                  year = year,
+                                  est_year = est_year,
+                                  key = key)
+                    
+                  }, 
+                  pth = data_in_pth,
                   id_vars = c("TRACT", "COUNTY"),
                   value_vars = NULL,
-                  table_type = "subject",
-                  key = api_key$census$key)
-
-s1201 <- get.acs5(data_in_name = config$data_in_names$census$S1201_2018,
-                  data_in_pth = data_in_pth,
-                  id_vars = c("TRACT", "COUNTY"),
-                  value_vars = NULL,
-                  table_type = "subject",
-                  key = api_key$census$key)
-
-s1501 <- get.acs5(data_in_name = config$data_in_names$census$S1501_2018,
-                  data_in_pth = data_in_pth,
-                  id_vars = c("TRACT", "COUNTY"),
-                  value_vars = NULL,
-                  table_type = "subject",
-                  key = api_key$census$key)
-
-s1901 <- get.acs5(data_in_name = config$data_in_names$census$S1901_2018,
-                  data_in_pth = data_in_pth,
-                  id_vars = c("TRACT", "COUNTY"),
-                  value_vars = NULL,
-                  table_type = "subject",
-                  key = api_key$census$key)
-
-s1902 <- get.acs5(data_in_name = config$data_in_names$census$S1902_2018,
-                  data_in_pth = data_in_pth,
-                  id_vars = c("TRACT", "COUNTY"),
-                  value_vars = NULL,
-                  table_type = "subject",
-                  key = api_key$census$key)
-
-B17024 <- get.acs5(data_in_name = config$data_in_names$census$B17024_2018,
-                   data_in_pth = data_in_pth,
-                   id_vars = c("TRACT", "COUNTY"),
-                   value_vars = NULL,
-                   table_type = "detail",
-                   key = api_key$census$key)
-
-B17026 <- get.acs5(data_in_name = config$data_in_names$census$B17026_2018,
-                   data_in_pth = data_in_pth,
-                   id_vars = c("TRACT", "COUNTY"),
-                   value_vars = NULL,
-                   table_type = "detail",
-                   key = api_key$census$key)
-
-B17010A <- get.acs5(data_in_name = config$data_in_names$census$B17010A_2018,
-                   data_in_pth = data_in_pth,
-                   id_vars = c("TRACT", "COUNTY"),
-                   value_vars = NULL,
-                   table_type = "detail",
-                   key = api_key$census$key)
-
-B17010B <- get.acs5(data_in_name = config$data_in_names$census$B17010B_2018,
-                    data_in_pth = data_in_pth,
-                    id_vars = c("TRACT", "COUNTY"),
-                    value_vars = NULL,
-                    table_type = "detail",
-                    key = api_key$census$key)
-
-B17010C <- get.acs5(data_in_name = config$data_in_names$census$B17010C_2018,
-                    data_in_pth = data_in_pth,
-                    id_vars = c("TRACT", "COUNTY"),
-                    value_vars = NULL,
-                    table_type = "detail",
-                    key = api_key$census$key)
-
-B17010D <- get.acs5(data_in_name = config$data_in_names$census$B17010D_2018,
-                    data_in_pth = data_in_pth,
-                    id_vars = c("TRACT", "COUNTY"),
-                    value_vars = NULL,
-                    table_type = "detail",
-                    key = api_key$census$key)
-
-B17010E <- get.acs5(data_in_name = config$data_in_names$census$B17010E_2018,
-                    data_in_pth = data_in_pth,
-                    id_vars = c("TRACT", "COUNTY"),
-                    value_vars = NULL,
-                    table_type = "detail",
-                    key = api_key$census$key)
-
-B17010F <- get.acs5(data_in_name = config$data_in_names$census$B17010F_2018,
-                    data_in_pth = data_in_pth,
-                    id_vars = c("TRACT", "COUNTY"),
-                    value_vars = NULL,
-                    table_type = "detail",
-                    key = api_key$census$key)
-
-B17010G <- get.acs5(data_in_name = config$data_in_names$census$B17010G_2018,
-                    data_in_pth = data_in_pth,
-                    id_vars = c("TRACT", "COUNTY"),
-                    value_vars = NULL,
-                    table_type = "detail",
-                    key = api_key$census$key)
-
-B17010H <- get.acs5(data_in_name = config$data_in_names$census$B17010H_2018,
-                    data_in_pth = data_in_pth,
-                    id_vars = c("TRACT", "COUNTY"),
-                    value_vars = NULL,
-                    table_type = "detail",
-                    key = api_key$census$key)
-
-B17010I <- get.acs5(data_in_name = config$data_in_names$census$B17010I_2018,
-                    data_in_pth = data_in_pth,
-                    id_vars = c("TRACT", "COUNTY"),
-                    value_vars = NULL,
-                    table_type = "detail",
-                    key = api_key$census$key)
+                  table_type = "detail",
+                  year = config$data_in_names$census$year,
+                  est_year = config$data_in_names$census$est_year,
+                  key = api_key$census$key,
+                  USE.NAMES = TRUE,
+                  simplify = FALSE)
 
 pt <- get.poverty_thresholds(data_in_name = config$data_in_names$poverty_threshold,
                              data_in_pth = data_in_pth)

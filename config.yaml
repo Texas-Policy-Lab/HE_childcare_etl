@@ -15,22 +15,12 @@ data_in_names:
   zip_shape: "zip_shape.csv"
   state_fips_state_name_xwalk: "state_fips_state_name_xwalk.csv"
   census:
-    S0601_2018: "S0601_2018.csv"
-    S1201_2018: "S1201_2018.csv"
-    S1501_2018: "S1501_2018.csv"
-    S1901_2018: "S1901_2018.csv"
-    S1902_2018: "S1902_2018.csv"
-    B17024_2018: "B17024_2018.csv"
-    B17026_2018: "B17026_2018.csv"
-    B17010A_2018: "B17010A_2018.csv"
-    B17010B_2018: "B17010B_2018.csv"
-    B17010C_2018: "B17010C_2018.csv"
-    B17010D_2018: "B17010D_2018.csv"
-    B17010E_2018: "B17010E_2018.csv"
-    B17010F_2018: "B17010F_2018.csv"
-    B17010G_2018: "B17010G_2018.csv"
-    B17010H_2018: "B17010H_2018.csv"
-    B17010I_2018: "B17010I_2018.csv"
+    year: 2018
+    est_year: 5 #options are 1, 3, 5
+    subject: ["S0601", "S1201", "S1501", "S1901", "S1902"]
+    detail: ["B17024", "B17026", "B17010A", "B17010B", 
+             "B17010C", "B17010D", "B17010E", "B17010F",
+             "B17010G", "B17010H", "B17010I"]
   poverty_threshold: "poverty_threshold_2019.xlsx"
 
 data_out_names:

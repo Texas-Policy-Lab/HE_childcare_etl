@@ -1,17 +1,28 @@
+#' @title Creates the ACS table name to match census labeling
+acs_table_name <- function(est_year, year, table) {
+  name <- glue::glue("ACSDT{est_year}Y{year}.{table}.csv",
+                     est_year = est_year,
+                     year = year,
+                     table = table)
+  return(name)
+}
+
 #' @title Data Dictionary for ACS5
 #' @inheritParams get.acs5
 #' @param url string. The url to join with the endpoint.
 #' @export
-get.census_data_dict <- function(data_in_name,
-                             data_pth_name, 
-                             endpoint,
-                             path,
-                             table,
-                             keep_est,
-                             keep_annote_est,
-                             keep_moe,
-                             keep_annote_moe,
-                             url = "groups/{table}.html", ...) {
+get.census_data_dict <- function(table,
+                                 pth, 
+                                 year,
+                                 est_year,
+                                 endpoint,
+                                 path,
+                                 keep_est,
+                                 keep_annote_est,
+                                 keep_moe,
+                                 keep_annote_moe,
+                                 url = "groups/{table}.html", ...) {
+
   url <- paste(endpoint, path, glue::glue(url, table = table), sep = "/")
 
   dct <- data.frame(est = keep_est,
@@ -42,7 +53,13 @@ get.census_data_dict <- function(data_in_name,
     dplyr::rename(variable = Name,
                   label = Label)
 
-  write.csv(df, file.path(data_in_pth, paste0("data_dic_", data_in_name)), row.names = FALSE)
+  name <- acs_table_name(est_year = est_year,
+                         year = year,
+                         table = table)
+  
+  write.csv(df, file.path(pth,
+                          paste0("data_dic_", name)),
+            row.names = FALSE)
 
   return(df)
 }
@@ -86,18 +103,19 @@ get.census_response <- function(r,
 #' @inheritParams get.acs5
 #' @export
 get.census_api <- function(id_vars,
-                       value_vars,
-                       key,
-                       year,
-                       table_type,
-                       path,
-                       tract,
-                       state,
-                       endpoint,
-                       ...) {
+                           value_vars,
+                           key,
+                           year,
+                           table_type,
+                           path,
+                           tract,
+                           state,
+                           endpoint,
+                           var_limit = 50,
+                           ...) {
 
   var_groups <- split_calls(v = value_vars,
-                            limit = c(50 - length(id_vars)))
+                            limit = c(var_limit - length(id_vars)))
 
   l <- lapply(var_groups, function(group_value_vars, endpoint, path, id_vars, tract, state, key) {
 
@@ -113,8 +131,12 @@ get.census_api <- function(id_vars,
                               group_value_vars = group_value_vars,
                               id_vars = id_vars)    
 
-  }, endpoint = endpoint, path = path, id_vars = id_vars,
-  tract = tract, state = state, key = key)
+  }, endpoint = endpoint,
+     path = path,
+     id_vars = id_vars,
+     tract = tract,
+     state = state,
+     key = key)
 
   df <- l %>%
     purrr::reduce(dplyr::left_join) %>%
@@ -127,15 +149,27 @@ get.census_api <- function(id_vars,
 
 
 create_path <- function(...) UseMethod("create_path")
+
 create_path.default <- function(cls, ...) {
-  glue::glue("data/{year}/acs/acs5/{table_type}", year = cls$year, table_type = cls$table_type)
+
+  p <- glue::glue("data/{year}/acs/acs{est_year}/{table_type}",
+                   year = cls$year,
+                   est_year = cls$est_year,
+                   table_type = cls$table_type)
+
+  return(p)
 }
 
 create_path.detail <- function(cls, ...) {
-  glue::glue("data/{year}/acs/acs5", year = cls$year)
+
+  p <- glue::glue("data/{year}/acs/acs{est_year}",
+                   year = cls$year,
+                   est_year = cls$est_year)
+
+  return(p)
 }
 
-#' @title Get Data for specified variables from American Community Survey 5 year estimates.
+#' @title Get Data for specified variables from American Community Survey XX year estimates.
 #' @param id_vars vector. The ID variables to include in each table e.g. TRACT, COUNTY
 #' @param value_vars vector. The non ID variables to pull down such as B10001E
 #' @param keep_est logical. Keep all variables that are estimates. Default is TRUE
@@ -148,27 +182,33 @@ create_path.detail <- function(cls, ...) {
 #' @param tract string. Default is "*" (all). Can specify a vector of selected tracts however.
 #' @param state string. Default is 48 for Texas. Can specify a vector of selected states however.
 #' @param endpoint string. The census endpoint for ACS 5.
+#' @param year int. The year
+#' @param est_year. The estimate year, taking on the values of 1, 3, or 5.
 #' @export
-get.acs5 <- function(data_in_name,
-                     data_in_pth,
-                     id_vars,
-                     value_vars = NULL,
-                     table_type,
-                     key,
-                     keep_est = TRUE,
-                     keep_annote_est = FALSE,
-                     keep_moe = FALSE,
-                     keep_annote_moe = FALSE,
-                     year = 2018,
-                     tract = "*",
-                     state = "48",
-                     endpoint = "https://api.census.gov",
-                             ...) {
+get.acs <- function(table,
+                    pth,
+                    id_vars,
+                    value_vars = NULL,
+                    year,
+                    est_year,
+                    table_type,
+                    key,
+                    keep_est = TRUE,
+                    keep_annote_est = FALSE,
+                    keep_moe = FALSE,
+                    keep_annote_moe = FALSE,
+                    tract = "*",
+                    state = "48",
+                    endpoint = "https://api.census.gov",
+                    ...) {
 
   assertthat::assert_that(table_type %in% c("detail", "subject", "profile", "cprofile"))
+  assertthat::assert_that(length(table_type) == 1)
+  assertthat::assert_that(est_year %in% c(1, 3, 5))
+  assertthat::assert_that(length(est_year) == 1)
 
-  cls <- structure(list(data_in_name = data_in_name,
-                        data_in_pth = data_in_pth,
+  cls <- structure(list(pth = pth,
+                        table = table,
                         id_vars = id_vars,
                         value_vars = value_vars,
                         key = key,
@@ -177,13 +217,15 @@ get.acs5 <- function(data_in_name,
                         keep_moe = keep_moe,
                         keep_annote_moe = keep_annote_moe,
                         year = year,
+                        est_year = est_year,
                         tract = tract,
                         state = state,
                         endpoint = endpoint,
-                        table = gsub("_.*","", data_in_name)),
+                        table_type = table_type),
                    class = table_type)
-  cls$path <- create_path(cls)
 
+  cls$path <- create_path(cls)
+  
   if(is.null(cls$value_vars)) {
 
     labs <- do.call("get.census_data_dict", cls)
@@ -195,7 +237,11 @@ get.acs5 <- function(data_in_name,
 
   Hmisc::label(df) <- as.list(labs$label[match(names(df), labs$variable)])
 
-  write.csv(df, file.path(data_in_pth, data_in_name), row.names = FALSE)
-  
+  name <- acs_table_name(est_year = est_year,
+                         year = year,
+                         table = table)
+
+  write.csv(df, file.path(pth, name), row.names = FALSE)
+
   return(df)
 }
