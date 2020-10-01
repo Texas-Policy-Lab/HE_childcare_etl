@@ -82,5 +82,3 @@ detail <- sapply(config$data_in_names$census$detail,
 
 pt <- get.poverty_thresholds(data_in_name = config$data_in_names$poverty_threshold,
                              data_in_pth = data_in_pth)
-
-save.image()
