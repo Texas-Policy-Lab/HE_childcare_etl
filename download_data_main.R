@@ -32,6 +32,9 @@ get.tract_shape(data_in_name = config$data_in_names$tract_shape,
 get.state_fips_state_name_xwalk(data_in_name = config$data_in_names$state_fips_state_name_xwalk,
                                 data_in_pth)
 
+## Download Pulse tables
+get.pulse_puf(data_in_pth = data_in_pth)
+
 ## Download census tables
 
 subject <- sapply(config$data_in_names$census$subject, 
@@ -82,3 +85,4 @@ detail <- sapply(config$data_in_names$census$detail,
 
 pt <- get.poverty_thresholds(data_in_name = config$data_in_names$poverty_threshold,
                              data_in_pth = data_in_pth)
+

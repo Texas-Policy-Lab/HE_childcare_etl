@@ -122,8 +122,20 @@ dm.ccl <- function(ccl_data_in_pth,
                    key = key,
                    write = FALSE) {
 
-  df <- readr::read_csv(file.path(ccl_data_in_pth, ccl_data_in_name)) %>% 
-    dplyr::mutate(operation_number = gsub("-.*", "", operation_number))
+  ccl <- readr::read_csv(file.path(ccl_data_in_pth, ccl_data_in_name))
+
+  assertthat::assert_that(all(c("operation_number", "operation_type",
+                                "days_of_operation", "accepts_child_care_subsidies") %in% names(ccl)))
+
+  doo <- dm.ccl_days_of_operation(ccl)
+
+  pt <- dm.ccl_operation_type(ccl)
+
+  ccl <- ccl %>% 
+    dplyr::mutate(operation_number = gsub("-.*", "", operation_number)) %>% 
+    dplyr::left_join(doo) %>% 
+    dplyr::left_join(pt) %>% 
+    dplyr::mutate(ccl_accepts_subsidy = ifelse(accepts_child_care_subsidies == "Y", TRUE, FALSE))
 
   if(geocode) {
 
