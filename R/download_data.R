@@ -171,23 +171,13 @@ get.state_fips_state_name_xwalk <- function(data_in_name,
   write.csv(cnty, file.path(data_in_pth, data_in_name), row.names = FALSE)
 }
 
-#' @title Get ZIP shape
-#' @param data_in_name string. The name to of the data to read in.
-#' @param data_in_pth string. The path to read the data in from.
-#' @export
-get.zip_shape <- function(data_in_name,
-                          data_in_pth,
-                          state = 48) {
-
-  geo <- tigris::zctas(state = state, cb = TRUE)
-  
-}
-
-
+#' @title Get Poverty thresholds
+#' @description Download Federal poverty thresholds from the census by family size from https://www.census.gov/data/tables/time-series/demo/income-poverty/historical-poverty-thresholds.html
 get.poverty_thresholds <- function(data_in_name,
                                    data_in_pth,
-                                   url = "https://www2.census.gov/programs-surveys/cps/tables/time-series/historical-poverty-thresholds/thresh19.xls") {
+                                   year = 19,
+                                   url = "https://www2.census.gov/programs-surveys/cps/tables/time-series/historical-poverty-thresholds/thresh{year}.xls") {
 
   dwnld_pth <- file.path(data_in_pth, data_in_name)
-  download.file(glue::glue(url, fl = data_in_name), dwnld_pth)
+  download.file(glue::glue(url, year = year), dwnld_pth)
 }
